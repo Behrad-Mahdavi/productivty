@@ -3,7 +3,7 @@ import { User, LogOut } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 export const UserSelector: React.FC = () => {
-  const { currentUser, logout, users, switchUser } = useUser();
+  const { currentUser, logout } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
 
   if (!currentUser) return null;
@@ -25,25 +25,10 @@ export const UserSelector: React.FC = () => {
             <small className="text-muted">کاربر فعال</small>
           </div>
           
-          {users.length > 1 && (
-            <div className="px-3 py-2 border-bottom">
-              <div className="fw-medium mb-2">تغییر کاربر:</div>
-              {users
-                .filter(user => user.id !== currentUser.id)
-                .map(user => (
-                  <button
-                    key={user.id}
-                    className="btn btn-sm btn-outline-secondary w-100 mb-1"
-                    onClick={() => {
-                      switchUser(user.id);
-                      setShowDropdown(false);
-                    }}
-                  >
-                    {user.name}
-                  </button>
-                ))}
-            </div>
-          )}
+          <div className="px-3 py-2 border-bottom">
+            <div className="fw-medium mb-2">برای تغییر کاربر:</div>
+            <small className="text-muted">ابتدا از حساب فعلی خارج شوید و سپس با ایمیل و رمز عبور کاربر دیگر وارد شوید</small>
+          </div>
           
           <div className="px-3 py-2">
             <button

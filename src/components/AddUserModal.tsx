@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { X, User, Lock, Eye, EyeOff } from 'lucide-react';
+import { X, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 
 interface AddUserModalProps {
   show: boolean;
   onClose: () => void;
-  onAdd: (name: string, password: string) => void;
+  onAdd: (name: string, email: string, password: string) => void;
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({ show, onClose, onAdd }) => {
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,10 +23,16 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ show, onClose, onAdd
       newErrors.name = 'نام کاربر الزامی است';
     }
 
+    if (!email.trim()) {
+      newErrors.email = 'ایمیل الزامی است';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'فرمت ایمیل صحیح نیست';
+    }
+
     if (!password) {
       newErrors.password = 'رمز عبور الزامی است';
-    } else if (password.length < 4) {
-      newErrors.password = 'رمز عبور باید حداقل 4 کاراکتر باشد';
+    } else if (password.length < 6) {
+      newErrors.password = 'رمز عبور باید حداقل 6 کاراکتر باشد';
     }
 
     if (password !== confirmPassword) {
@@ -40,9 +47,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ show, onClose, onAdd
     e.preventDefault();
     
     if (validateForm()) {
-      onAdd(name.trim(), password);
+      onAdd(name.trim(), email.trim(), password);
       // Reset form
       setName('');
+      setEmail('');
       setPassword('');
       setConfirmPassword('');
       setErrors({});
@@ -51,6 +59,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ show, onClose, onAdd
 
   const handleClose = () => {
     setName('');
+    setEmail('');
     setPassword('');
     setConfirmPassword('');
     setErrors({});
@@ -91,6 +100,23 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ show, onClose, onAdd
                   />
                 </div>
                 {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-medium">ایمیل</label>
+                <div className="input-group">
+                  <span className="input-group-text">
+                    <Mail size={16} />
+                  </span>
+                  <input
+                    type="email"
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                    placeholder="ایمیل خود را وارد کنید"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                {errors.email && <div className="invalid-feedback">{errors.email}</div>}
               </div>
 
               <div className="mb-3">

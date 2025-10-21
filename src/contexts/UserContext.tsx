@@ -1,14 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  type User as FirebaseUser
+} from 'firebase/auth';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  getDocs
+} from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 interface UserContextType {
   currentUser: User | null;
   users: User[];
-  login: (userId: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  addUser: (name: string, password: string) => Promise<string>;
+  addUser: (name: string, email: string, password: string) => Promise<string>;
   switchUser: (userId: string) => void;
   isLoggedIn: boolean;
+  loading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -33,81 +49,112 @@ const sha256 = async (text: string): Promise<string> => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load users and current user on mount
+  // Listen to Firebase Auth state changes
   useEffect(() => {
-    const loadUsers = () => {
-      const usersData = localStorage.getItem('ppj_users');
-      if (usersData) {
-        setUsers(JSON.parse(usersData));
-      }
-    };
-
-    const loadCurrentUser = () => {
-      const currentUserId = localStorage.getItem('ppj_currentUser');
-      if (currentUserId) {
-        const usersData = localStorage.getItem('ppj_users');
-        if (usersData) {
-          const allUsers = JSON.parse(usersData);
-          const user = allUsers.find((u: User) => u.id === currentUserId);
-          if (user) {
-            setCurrentUser(user);
-          }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // Load user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setCurrentUser({
+            id: firebaseUser.uid,
+            name: userData.name,
+            passwordHash: userData.passwordHash,
+            createdAt: userData.createdAt
+          });
         }
+      } else {
+        setCurrentUser(null);
       }
-    };
+      setLoading(false);
+    });
 
-    loadUsers();
-    loadCurrentUser();
+    return () => unsubscribe();
   }, []);
 
-  const login = async (userId: string, password: string): Promise<boolean> => {
-    const user = users.find(u => u.id === userId);
-    if (!user) return false;
-
-    try {
-      const hash = await sha256(password);
-      if (hash === user.passwordHash) {
-        setCurrentUser(user);
-        localStorage.setItem('ppj_currentUser', userId);
-        return true;
+  // Load all users from Firestore
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const usersList: User[] = [];
+        usersSnapshot.forEach((doc) => {
+          const data = doc.data();
+          usersList.push({
+            id: doc.id,
+            name: data.name,
+            passwordHash: data.passwordHash,
+            createdAt: data.createdAt
+          });
+        });
+        setUsers(usersList);
+      } catch (error) {
+        console.error('Error loading users:', error);
       }
-      return false;
+    };
+
+    if (currentUser) {
+      loadUsers();
+    }
+  }, [currentUser]);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
     }
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('ppj_currentUser');
-  };
-
-  const addUser = async (name: string, password: string): Promise<string> => {
-    const userId = `user_${Date.now()}`;
-    const passwordHash = await sha256(password);
-    
-    const newUser: User = {
-      id: userId,
-      name,
-      passwordHash,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem('ppj_users', JSON.stringify(updatedUsers));
-
-    return userId;
-  };
-
-  const switchUser = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      setCurrentUser(user);
-      localStorage.setItem('ppj_currentUser', userId);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
     }
+  };
+
+  const addUser = async (name: string, email: string, password: string): Promise<string> => {
+    try {
+      // Create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
+      
+      // Create user document in Firestore
+      const passwordHash = await sha256(password);
+      const userData = {
+        name,
+        passwordHash,
+        createdAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', userId), userData);
+
+      // Update local state
+      const newUser: User = {
+        id: userId,
+        name,
+        passwordHash,
+        createdAt: userData.createdAt
+      };
+
+      setUsers(prev => [...prev, newUser]);
+      return userId;
+    } catch (error) {
+      console.error('Add user error:', error);
+      throw error;
+    }
+  };
+
+  const switchUser = () => {
+    // This will be handled by Firebase Auth state changes
+    // The user needs to sign in with their credentials
+    console.log('Switch user functionality needs to be implemented with proper authentication');
   };
 
   const isLoggedIn = currentUser !== null;
@@ -120,7 +167,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout,
       addUser,
       switchUser,
-      isLoggedIn
+      isLoggedIn,
+      loading
     }}>
       {children}
     </UserContext.Provider>

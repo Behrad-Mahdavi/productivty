@@ -12,15 +12,31 @@ import { ReflectionPage } from './pages/ReflectionPage';
 import { StatsPage } from './pages/StatsPage';
 
 function AppContent() {
-  const { loadAppData } = useStore();
+  const { loadAppData, setCurrentUserId } = useStore();
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, loading, currentUser } = useUser();
 
   useEffect(() => {
-    if (isLoggedIn) {
-      loadAppData();
+    if (isLoggedIn && currentUser) {
+      setCurrentUserId(currentUser.id);
+      loadAppData(currentUser.id);
+    } else {
+      setCurrentUserId(null);
     }
-  }, [loadAppData, isLoggedIn]);
+  }, [loadAppData, isLoggedIn, currentUser, setCurrentUserId]);
+
+  if (loading) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">در حال بارگذاری...</span>
+          </div>
+          <p className="mt-3 text-muted">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <LoginOrSwitchUser />;

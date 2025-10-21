@@ -1,5 +1,4 @@
 import type { TimerState, FocusSession } from '../types';
-import { saveTimerState, saveFocusSessions, loadData } from './storage';
 
 export const TIMER_DURATIONS = {
   work: 25 * 60, // 25 minutes
@@ -56,7 +55,6 @@ export const pauseTimer = (timerState: TimerState): TimerState => {
     remainingSec: Math.max(0, timerState.durationSec - elapsed),
     isPaused: true,
   };
-  saveTimerState(newState);
   return newState;
 };
 
@@ -67,7 +65,6 @@ export const resumeTimer = (timerState: TimerState): TimerState => {
     startTimestamp: Date.now() - (elapsed * 1000), // Adjust start time to account for elapsed time
     isPaused: false,
   };
-  saveTimerState(newState);
   return newState;
 };
 
@@ -84,14 +81,6 @@ export const completeSession = (timerState: TimerState): FocusSession => {
     completed,
     type: timerState.mode as 'work' | 'shortBreak' | 'longBreak',
   };
-
-  // Save session
-  const data = loadData();
-  data.focusSessions.push(session);
-  saveFocusSessions(data.focusSessions);
-
-  // Clear timer state
-  saveTimerState(null);
 
   return session;
 };
