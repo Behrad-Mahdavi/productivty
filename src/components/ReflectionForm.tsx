@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Calendar } from 'lucide-react';
+import { Save, Calendar, Clock } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 interface ReflectionFormProps {

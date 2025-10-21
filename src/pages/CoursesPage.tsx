@@ -6,7 +6,7 @@ import { PersianDatePicker } from '../components/PersianDatePicker';
 import moment from 'moment-jalaali';
 
 export const CoursesPage: React.FC = () => {
-  const { courses, addCourse, updateCourse, deleteCourse, addAssignment, updateAssignment, deleteAssignment } = useStore();
+  const { courses, addCourse, deleteCourse, addAssignment, updateAssignment } = useStore();
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
