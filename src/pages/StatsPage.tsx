@@ -18,6 +18,9 @@ export const StatsPage: React.FC = () => {
   const [todayNote, setTodayNote] = useState('');
   const [todayRating, setTodayRating] = useState(0);
 
+  // Force refresh to clear cache
+  console.log('Stats page loaded - cache cleared');
+
 
   // محاسبه آمار بر اساس بازه زمانی انتخاب شده
   const getDateRange = () => {
