@@ -303,16 +303,22 @@ export const saveFocusSessions = async (userId: string, focusSessions: FocusSess
 export const saveTimerState = async (userId: string, timerState: TimerState | null): Promise<void> => {
   try {
     if (timerState) {
-      await setDoc(doc(db, COLLECTIONS.TIMER_STATE, userId), {
+      const timerData: any = {
         userId,
         mode: timerState.mode,
         startTimestamp: timerState.startTimestamp,
         durationSec: timerState.durationSec,
         remainingSec: timerState.remainingSec,
-        taskId: timerState.taskId,
         cyclesCompleted: timerState.cyclesCompleted,
         isPaused: timerState.isPaused
-      });
+      };
+      
+      // Only add taskId if it exists
+      if (timerState.taskId) {
+        timerData.taskId = timerState.taskId;
+      }
+      
+      await setDoc(doc(db, COLLECTIONS.TIMER_STATE, userId), timerData);
     } else {
       await deleteDoc(doc(db, COLLECTIONS.TIMER_STATE, userId));
     }
@@ -332,7 +338,7 @@ export const loadTimerState = async (userId: string): Promise<TimerState> => {
         startTimestamp: data.startTimestamp,
         durationSec: data.durationSec,
         remainingSec: data.remainingSec,
-        taskId: data.taskId,
+        taskId: data.taskId || undefined,
         cyclesCompleted: data.cyclesCompleted,
         isPaused: data.isPaused
       };

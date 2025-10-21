@@ -17,6 +17,11 @@
 3. به تب "Sign-in method" بروید
 4. "Email/Password" را فعال کنید
 5. "Anonymous" را نیز فعال کنید (اختیاری)
+6. به تب "Settings" → "Authorized domains" بروید
+7. دامنه‌های زیر را اضافه کنید:
+   - `localhost` (برای development)
+   - `productivty.vercel.app` (برای production)
+   - `127.0.0.1` (برای local testing)
 
 ### 3. ایجاد Firestore Database
 
@@ -146,10 +151,37 @@ timerState/
 
 اگر مشکلی پیش آمد:
 
-1. Console مرورگر را چک کنید
-2. Firebase Console را بررسی کنید
-3. Network tab را در Developer Tools چک کنید
-4. Authentication status را بررسی کنید
+1. **Console مرورگر** - F12 بزنید و خطاها را چک کنید
+2. **Firebase Console** - Authentication و Firestore را بررسی کنید
+3. **Network tab** - در Developer Tools چک کنید
+4. **Authentication status** - کاربر وارد شده یا نه
+5. **OAuth Domain Error** - اگر این خطا را دیدید:
+   ```
+   The current domain is not authorized for OAuth operations
+   ```
+   به Firebase Console → Authentication → Settings → Authorized domains بروید و دامنه را اضافه کنید
+
+### 11. مشکلات رایج
+
+#### مشکل: "Unsupported field value: undefined"
+
+**راه حل:** این مشکل معمولاً با timer state پیش می‌آید. کد بروزرسانی شده این مشکل را حل می‌کند.
+
+#### مشکل: "Domain not authorized"
+
+**راه حل:** دامنه‌های زیر را به Firebase Console اضافه کنید:
+
+- `localhost`
+- `127.0.0.1`
+- `productivty.vercel.app`
+
+#### مشکل: داده‌ها sync نمی‌شوند
+
+**راه حل:**
+
+1. Security Rules را چک کنید
+2. Console logs را بررسی کنید
+3. Firebase Console → Firestore → Data را چک کنید
 
 ### 11. هزینه‌ها
 

@@ -146,13 +146,23 @@ export const useStore = create<AppStore>((set, get) => {
           if (nextMode === 'work') {
             // Start new work session
             const newTimerState = createTimerState('work', undefined, newCycles);
+            // Remove undefined taskId before saving
+            const timerStateToSave = { ...newTimerState };
+            if (!timerStateToSave.taskId) {
+              delete timerStateToSave.taskId;
+            }
             set({ timerState: newTimerState });
-            await saveTimerState(userId, newTimerState);
+            await saveTimerState(userId, timerStateToSave);
           } else {
             // Start break
             const newTimerState = createTimerState(nextMode, undefined, newCycles);
+            // Remove undefined taskId before saving
+            const timerStateToSave = { ...newTimerState };
+            if (!timerStateToSave.taskId) {
+              delete timerStateToSave.taskId;
+            }
             set({ timerState: newTimerState });
-            await saveTimerState(userId, newTimerState);
+            await saveTimerState(userId, timerStateToSave);
           }
           
           set({ focusSessions: [...data.focusSessions, session] });
@@ -357,7 +367,13 @@ export const useStore = create<AppStore>((set, get) => {
     const cyclesCompleted = currentTimer?.mode === 'work' ? currentTimer.cyclesCompleted + 1 : 0;
     const newTimerState = createTimerState(mode as 'work' | 'shortBreak' | 'longBreak', taskId, cyclesCompleted);
     set({ timerState: newTimerState });
-    await saveTimerState(currentUserId, newTimerState);
+    
+    // Clean timer state before saving
+    const timerStateToSave = { ...newTimerState };
+    if (!timerStateToSave.taskId) {
+      delete timerStateToSave.taskId;
+    }
+    await saveTimerState(currentUserId, timerStateToSave);
   },
   
   pauseTimer: async () => {
@@ -368,7 +384,13 @@ export const useStore = create<AppStore>((set, get) => {
     if (currentTimer) {
       const pausedTimer = pauseTimer(currentTimer);
       set({ timerState: pausedTimer });
-      await saveTimerState(currentUserId, pausedTimer);
+      
+      // Clean timer state before saving
+      const timerStateToSave = { ...pausedTimer };
+      if (!timerStateToSave.taskId) {
+        delete timerStateToSave.taskId;
+      }
+      await saveTimerState(currentUserId, timerStateToSave);
     }
   },
   
@@ -380,7 +402,13 @@ export const useStore = create<AppStore>((set, get) => {
     if (currentTimer) {
       const resumedTimer = resumeTimer(currentTimer);
       set({ timerState: resumedTimer });
-      await saveTimerState(currentUserId, resumedTimer);
+      
+      // Clean timer state before saving
+      const timerStateToSave = { ...resumedTimer };
+      if (!timerStateToSave.taskId) {
+        delete timerStateToSave.taskId;
+      }
+      await saveTimerState(currentUserId, timerStateToSave);
     }
   },
   
