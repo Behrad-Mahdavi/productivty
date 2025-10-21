@@ -52,6 +52,13 @@ export interface TimerState {
   isPaused: boolean;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  passwordHash: string;
+  createdAt: string;
+}
+
 export interface AppData {
   tasks: Task[];
   courses: Course[];

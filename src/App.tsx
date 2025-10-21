@@ -1,20 +1,30 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from './store/useStore';
+import { UserProvider, useUser } from './contexts/UserContext';
 import { Layout } from './components/Layout';
+import { LoginOrSwitchUser } from './components/LoginOrSwitchUser';
+import { UserSelector } from './components/UserSelector';
 import { Dashboard } from './pages/Dashboard';
 import { TasksPage } from './pages/TasksPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { ReflectionPage } from './pages/ReflectionPage';
 import { StatsPage } from './pages/StatsPage';
 
-function App() {
+function AppContent() {
   const { loadAppData } = useStore();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const { isLoggedIn, currentUser } = useUser();
 
   useEffect(() => {
-    loadAppData();
-  }, [loadAppData]);
+    if (isLoggedIn) {
+      loadAppData();
+    }
+  }, [loadAppData, isLoggedIn]);
+
+  if (!isLoggedIn) {
+    return <LoginOrSwitchUser />;
+  }
 
   const renderPage = () => {
     switch (currentPage) {
@@ -34,7 +44,11 @@ function App() {
   };
 
   return (
-    <Layout currentPage={currentPage} onPageChange={setCurrentPage}>
+    <Layout 
+      currentPage={currentPage} 
+      onPageChange={setCurrentPage}
+      userSelector={<UserSelector />}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentPage}
@@ -47,6 +61,14 @@ function App() {
         </motion.div>
       </AnimatePresence>
     </Layout>
+  );
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
   );
 }
 

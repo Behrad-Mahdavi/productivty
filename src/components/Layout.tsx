@@ -14,6 +14,7 @@ interface LayoutProps {
   children: React.ReactNode;
   currentPage: string;
   onPageChange: (page: string) => void;
+  userSelector?: React.ReactNode;
 }
 
 const navigation = [
@@ -24,7 +25,7 @@ const navigation = [
   { id: 'stats', label: 'آمار', icon: BarChart3 },
 ];
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, userSelector }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -126,7 +127,25 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageCha
             <Menu size={20} />
           </button>
           <h5 className="mb-0 fw-bold">مجله بهره‌وری</h5>
-          <div style={{ width: '40px' }}></div>
+          {userSelector && (
+            <div className="d-flex align-items-center">
+              {userSelector}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop header */}
+        <div className="d-none d-lg-block bg-white shadow-sm border-bottom p-3">
+          <div className="d-flex align-items-center justify-content-between">
+            <h4 className="mb-0 fw-bold text-dark">
+              {navigation.find(item => item.id === currentPage)?.label || 'داشبورد'}
+            </h4>
+            {userSelector && (
+              <div className="d-flex align-items-center">
+                {userSelector}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content */}
