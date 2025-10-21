@@ -190,6 +190,9 @@ export const CoursesPage: React.FC = () => {
                         </span>
                       </div>
                       <p className="card-text small text-muted mb-2">{assignment.courseName} ({assignment.courseCode})</p>
+                      {assignment.description && (
+                        <p className="card-text small text-muted mb-2">{assignment.description}</p>
+                      )}
                       <div className="d-flex align-items-center text-muted small">
                         <Calendar size={14} className="me-1" />
                         <span>{formatPersianDate(assignment.dueDate, 'compact')}</span>
@@ -308,21 +311,28 @@ export const CoursesPage: React.FC = () => {
                       {course.assignments.length > 0 && (
                         <div className="assignment-list">
                           {course.assignments.slice(0, 3).map((assignment) => (
-                            <div key={assignment.id} className="d-flex align-items-center justify-content-between mb-2">
-                              <div className="d-flex align-items-center">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input me-2"
-                                  checked={assignment.done}
-                                  onChange={() => updateAssignment(course.id, assignment.id, { done: !assignment.done })}
-                                />
-                                <span className={`small ${assignment.done ? 'text-decoration-line-through text-muted' : ''}`}>
-                                  {assignment.title}
-                                </span>
+                            <div key={assignment.id} className="mb-2">
+                              <div className="d-flex align-items-center justify-content-between mb-1">
+                                <div className="d-flex align-items-center">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input me-2"
+                                    checked={assignment.done}
+                                    onChange={() => updateAssignment(course.id, assignment.id, { done: !assignment.done })}
+                                  />
+                                  <span className={`small ${assignment.done ? 'text-decoration-line-through text-muted' : ''}`}>
+                                    {assignment.title}
+                                  </span>
+                                </div>
+                                <small className={`text-muted ${isOverdue(assignment.dueDate) && !assignment.done ? 'text-danger' : ''}`}>
+                                  {formatPersianDate(assignment.dueDate, 'short')}
+                                </small>
                               </div>
-                              <small className={`text-muted ${isOverdue(assignment.dueDate) && !assignment.done ? 'text-danger' : ''}`}>
-                                {formatPersianDate(assignment.dueDate, 'short')}
-                              </small>
+                              {assignment.description && (
+                                <div className="ms-4">
+                                  <small className="text-muted">{assignment.description}</small>
+                                </div>
+                              )}
                             </div>
                           ))}
                           {course.assignments.length > 3 && (
