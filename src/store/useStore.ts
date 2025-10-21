@@ -5,6 +5,7 @@ import {
   saveTasks, 
   saveCourses, 
   saveReflections, 
+  saveFocusSessions,
   saveTimerState,
   loadTimerState,
   subscribeToTasks,
@@ -418,7 +419,47 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      completeSession(currentTimer);
+      // Complete the session and save focus minutes
+      const session = completeSession(currentTimer);
+      
+      // Add session to focusSessions
+      const updatedFocusSessions = [...get().focusSessions, session];
+      set({ focusSessions: updatedFocusSessions });
+      await saveFocusSessions(currentUserId, updatedFocusSessions);
+      
+      // Add focus minutes to today's reflection if it's a work session
+      if (currentTimer.mode === 'work' && session.durationSec > 0) {
+        const focusMinutes = Math.round(session.durationSec / 60);
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get or create today's reflection
+        const todayReflection = get().reflections.find(r => r.date === today);
+        if (todayReflection) {
+          // Update existing reflection
+          const updatedReflection = {
+            ...todayReflection,
+            focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+          };
+          const updatedReflections = get().reflections.map(r => 
+            r.date === today ? updatedReflection : r
+          );
+          set({ reflections: updatedReflections });
+          await saveReflections(currentUserId, updatedReflections);
+        } else {
+          // Create new reflection with focus minutes
+          const newReflection = {
+            date: today,
+            good: '',
+            distraction: '',
+            improve: '',
+            focusMinutes: focusMinutes
+          };
+          const updatedReflections = [...get().reflections, newReflection];
+          set({ reflections: updatedReflections });
+          await saveReflections(currentUserId, updatedReflections);
+        }
+      }
+      
       set({ timerState: null });
       await saveTimerState(currentUserId, null);
     }
@@ -430,7 +471,47 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      completeSession(currentTimer);
+      // Complete the session and save focus minutes
+      const session = completeSession(currentTimer);
+      
+      // Add session to focusSessions
+      const updatedFocusSessions = [...get().focusSessions, session];
+      set({ focusSessions: updatedFocusSessions });
+      await saveFocusSessions(currentUserId, updatedFocusSessions);
+      
+      // Add focus minutes to today's reflection if it's a work session
+      if (currentTimer.mode === 'work' && session.durationSec > 0) {
+        const focusMinutes = Math.round(session.durationSec / 60);
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get or create today's reflection
+        const todayReflection = get().reflections.find(r => r.date === today);
+        if (todayReflection) {
+          // Update existing reflection
+          const updatedReflection = {
+            ...todayReflection,
+            focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+          };
+          const updatedReflections = get().reflections.map(r => 
+            r.date === today ? updatedReflection : r
+          );
+          set({ reflections: updatedReflections });
+          await saveReflections(currentUserId, updatedReflections);
+        } else {
+          // Create new reflection with focus minutes
+          const newReflection = {
+            date: today,
+            good: '',
+            distraction: '',
+            improve: '',
+            focusMinutes: focusMinutes
+          };
+          const updatedReflections = [...get().reflections, newReflection];
+          set({ reflections: updatedReflections });
+          await saveReflections(currentUserId, updatedReflections);
+        }
+      }
+      
       const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
       const newCycles = currentTimer.mode === 'work' ? currentTimer.cyclesCompleted + 1 : currentTimer.cyclesCompleted;
       
