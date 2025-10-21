@@ -1,0 +1,421 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Custom styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background-color: #f8f9fa;
+  color: #b0b0b0;
+}
+
+/* Improve contrast for titles and headings */
+h1, h2, h3, h4, h5, h6 {
+  color: #a7a7a7 !important;
+  font-weight: 600;
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  color: #a9a9a9 !important;
+  font-weight: 600;
+}
+
+/* Improve button contrast */
+.btn {
+  font-weight: 500;
+  border-width: 1px;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+  color: white;
+}
+
+.btn-success {
+  background-color: #198754;
+  border-color: #198754;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+  border-color: #146c43;
+  color: white;
+}
+
+.btn-outline-secondary {
+  color: #6c757d;
+  border-color: #6c757d;
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Improve form control contrast */
+.form-control {
+  color: #212529;
+  background-color: #fff;
+  border-color: #ced4da;
+}
+
+.form-control:focus {
+  color: #212529;
+  background-color: #fff;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-select {
+  color: #212529;
+  background-color: #fff;
+  border-color: #ced4da;
+}
+
+.form-select:focus {
+  color: #212529;
+  background-color: #fff;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Improve text contrast */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.card-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.card-text {
+  color: #6c757d;
+}
+
+/* Improve badge contrast */
+.badge {
+  font-weight: 500;
+}
+
+.badge-primary {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.badge-success {
+  background-color: #198754;
+  color: white;
+}
+
+.badge-info {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+/* Improve progress bar contrast */
+.progress-bar {
+  background-color: #198754;
+}
+
+/* Improve alert contrast */
+.alert {
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  color: #0f5132;
+  background-color: #d1e7dd;
+  border-color: #badbcc;
+}
+
+.alert-danger {
+  color: #842029;
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+}
+
+/* RTL Support */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* Custom card styles */
+.card {
+  color: #ffffff;
+  background-color: #212529;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 12px;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Task card styles */
+.task-card {
+  border-left: 4px solid #28a745;
+  margin-bottom: 1rem;
+}
+
+.task-card.completed {
+  opacity: 0.7;
+  border-left-color: #6c757d;
+}
+
+.task-card.completed .task-title {
+  text-decoration: line-through;
+}
+
+/* Category badges */
+.category-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* Progress bar */
+.progress {
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Timer circle */
+.timer-circle {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 8px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 auto;
+}
+
+.timer-progress {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 216px;
+  height: 216px;
+  border-radius: 50%;
+  background: conic-gradient(#28a745 0deg, #28a745 var(--progress), #e9ecef var(--progress));
+  z-index: -1;
+}
+
+/* Focus timer colors */
+.timer-work {
+  --timer-color: #dc3545;
+}
+
+.timer-break {
+  --timer-color: #17a2b8;
+}
+
+.timer-long-break {
+  --timer-color: #28a745;
+}
+
+/* Stats cards */
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.stat-card .card-body {
+  padding: 1.5rem;
+}
+
+/* Form styles */
+.form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-select:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Button styles */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+}
+
+.btn:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn:active {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Animation classes removed */
+
+/* Sidebar styles */
+.sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  border-right: 1px solid #e9ecef;
+}
+
+/* Fix sidebar positioning */
+@media (min-width: 992px) {
+  .ms-lg-5 {
+    margin-left: 280px !important;
+  }
+}
+
+/* Mobile sidebar animation */
+@media (max-width: 991.98px) {
+  .ms-lg-5 {
+    margin-left: 0 !important;
+  }
+}
+
+/* Header styles */
+.header {
+  background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Modal styles */
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Alert styles */
+.alert {
+  border: none;
+  border-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timer-circle {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .timer-progress {
+    width: 166px;
+    height: 166px;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .modal-dialog {
+    margin: 1rem;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .card {
+    background-color: #212529;
+    color: #ffffff;
+  }
+  
+  .form-control {
+    background-color: #3d3d3d;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .form-select {
+    background-color: #3d3d3d;
+    border-color: #555;
+    color: #ffffff;
+  }
+}
+
+/* Persian Date Picker Styles */
+.persian-date-picker {
+  position: relative;
+}
+
+.persian-date-picker .dropdown-menu {
+  z-index: 9999 !important;
+  min-width: 300px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.persian-date-picker .dropdown-menu.show {
+  display: block;
+}
+
+/* Dropdown z-index fix */
+.dropdown-menu {
+  z-index: 9999 !important;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle::after {
+  display: none;
+}
+
+/* Heatmap styles */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  margin-bottom: 20px;
+}
+
+.heatmap-row {
+  display: contents;
+}
+
+.heatmap-cell {
+  width: 100%;
+  height: 20px;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
