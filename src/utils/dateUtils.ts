@@ -17,7 +17,18 @@ export const formatPersianDate = (date: string | Date, format: 'full' | 'compact
 };
 
 export const getPersianDayName = (date: string | Date): string => {
-  return moment(date).format('dddd');
+  const dayNames = {
+    0: 'یکشنبه',
+    1: 'دوشنبه', 
+    2: 'سه‌شنبه',
+    3: 'چهارشنبه',
+    4: 'پنج‌شنبه',
+    5: 'جمعه',
+    6: 'شنبه'
+  };
+  
+  const dayIndex = moment(date).day();
+  return dayNames[dayIndex as keyof typeof dayNames] || '';
 };
 
 export const getPersianMonthName = (date: string | Date): string => {

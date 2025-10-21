@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
-import { formatPersianDate, getPersianYear } from '../utils/dateUtils';
+import { formatPersianDate, getPersianYear, getPersianDayName } from '../utils/dateUtils';
 
 interface DateDisplayProps {
   date?: Date;
@@ -17,6 +17,7 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
   const fullDate = formatPersianDate(date, 'full');
   const compactDate = formatPersianDate(date, 'compact');
   const year = getPersianYear(date);
+  const dayName = getPersianDayName(date);
   const time = new Date(date).toLocaleTimeString('fa-IR', { 
     hour: '2-digit', 
     minute: '2-digit' 
@@ -28,7 +29,7 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
         <div className="card-body text-white text-center p-3">
           <div className="d-flex align-items-center justify-content-center mb-2">
             <Calendar size={20} className="me-2" />
-            <span className="fw-bold">{fullDate.split('،')[0]}</span>
+            <span className="fw-bold">{dayName}</span>
           </div>
           <div className="h4 mb-1 fw-bold">{fullDate.split('،')[1]?.trim()}</div>
           <div className="small opacity-75">{year}</div>
@@ -64,7 +65,7 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
     <div className="text-center">
       <div className="d-flex align-items-center justify-content-center mb-2">
         <Calendar size={20} className="me-2 text-primary" />
-        <span className="h5 mb-0 fw-bold text-dark">{fullDate.split('،')[0]}</span>
+        <span className="h5 mb-0 fw-bold text-dark">{dayName}</span>
       </div>
       <div className="h3 mb-1 fw-bold text-primary">{fullDate.split('،')[1]?.trim()}</div>
       <div className="text-muted">{year}</div>
