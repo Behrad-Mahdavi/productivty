@@ -203,8 +203,7 @@ export const GamificationDashboard: React.FC = () => {
             <div className="alert alert-info mb-3">
               <h6 className="alert-heading">🏆 رقابت آنلاین</h6>
               <p className="mb-0">
-                آمار همه کاربران از دیتابیس محاسبه می‌شود و به صورت real-time در جدول رتبه‌بندی نمایش داده می‌شود.
-                هر کاربر با نام واقعی خودش نمایش داده می‌شود.
+                آمار همه کاربران از دیتابیس محاسبه می‌شود و در جدول رتبه‌بندی نمایش داده می‌شود.
               </p>
             </div>
             
@@ -344,17 +343,7 @@ export const GamificationDashboard: React.FC = () => {
                               <div className="d-flex flex-column align-items-center">
                                 <Trophy className="mb-2" size={32} />
                                 <p className="mb-0">هنوز کاربر دیگری در دیتابیس وجود ندارد</p>
-                                <small>کاربران جدید باید focus sessions انجام دهند تا در leaderboard نمایش داده شوند</small>
-                                <div className="mt-3">
-                                  <div className="alert alert-light border">
-                                    <h6 className="alert-heading">💡 نحوه نمایش در Leaderboard</h6>
-                                    <ol className="mb-0 text-start">
-                                      <li>کاربران باید focus sessions انجام دهند</li>
-                                      <li>آمار از دیتابیس محاسبه می‌شود</li>
-                                      <li>نام واقعی کاربران نمایش داده می‌شود</li>
-                                    </ol>
-                                  </div>
-                                </div>
+                                <small>کاربران باید focus sessions انجام دهند تا در leaderboard نمایش داده شوند</small>
                               </div>
                             </td>
                           </tr>
@@ -425,16 +414,16 @@ export const GamificationDashboard: React.FC = () => {
                   <Zap className="text-warning mb-3" size={32} />
                   <h5 className="text-warning mb-2">
                     {userStats && userStats.streak >= 7 
-                      ? '🔥 شما در حال آتش گرفتن هستید!' 
+                      ? '🔥 عالی!' 
                       : userStats && userStats.streak >= 3 
-                      ? '💪 عالی! ادامه دهید!' 
-                      : '🚀 شروع کنید و رکورد بزنید!'
+                      ? '💪 خوب!' 
+                      : '🚀 شروع کنید!'
                     }
                   </h5>
                   <p className="text-muted mb-0">
                     {userStats && userStats.totalHours > 0 
-                      ? `شما ${formatTime(userStats.totalHours)} کار کرده‌اید و ${userStats.streak} روز متوالی فعالیت دارید!`
-                      : 'اولین ساعت کار خود را شروع کنید!'
+                      ? `${formatTime(userStats.totalHours)} کار کرده‌اید`
+                      : 'شروع کنید!'
                     }
                   </p>
                 </div>

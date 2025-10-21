@@ -64,8 +64,8 @@ export const LoginOrSwitchUser: React.FC = () => {
                   <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '60px', height: '60px' }}>
                     <Users className="text-white" size={28} />
                   </div>
-                  <h3 className="fw-bold text-dark">ورود به سیستم</h3>
-                  <p className="text-muted">برای ادامه، وارد حساب کاربری خود شوید</p>
+                  <h3 className="fw-bold" style={{ color: '#ffffff' }}>ورود به سیستم</h3>
+                  <p className="text-light" style={{ color: '#ffffff' }}>برای ادامه، وارد حساب کاربری خود شوید</p>
                 </div>
 
                 {loginError && (
