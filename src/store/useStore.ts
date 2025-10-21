@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, Course, Reflection, FocusSession, TimerState, Assignment, TimerSettings } from '../types';
+import type { Task, Course, Reflection, FocusSession, TimerState, Assignment, TimerSettings, GamificationData, UserStats } from '../types';
 import { 
   loadData, 
   saveTasks, 
@@ -33,6 +33,7 @@ interface AppStore {
   timerState: TimerState | null;
   timerSettings: TimerSettings;
   currentUserId: string | null;
+  gamification: GamificationData | null;
   
   // Actions
   setCurrentUserId: (userId: string | null) => void;
@@ -74,6 +75,11 @@ interface AppStore {
   addFocusSession: (minutes: number) => Promise<void>;
   updateFocusSession: (sessionId: string, minutes: number) => Promise<void>;
   deleteFocusSession: (sessionId: string) => Promise<void>;
+  
+  // Gamification actions
+  calculateUserStats: (userId: string) => UserStats;
+  updateLeaderboard: () => Promise<void>;
+  loadGamificationData: (userId: string) => Promise<void>;
 }
 
 export const useStore = create<AppStore>((set, get) => {
@@ -86,6 +92,7 @@ export const useStore = create<AppStore>((set, get) => {
     reflections: [],
     focusSessions: [],
     timerState: null,
+    gamification: null,
     timerSettings: {
       workDuration: 25,
       shortBreakDuration: 5,
@@ -667,6 +674,111 @@ export const useStore = create<AppStore>((set, get) => {
     } catch (error) {
       console.error('Error deleting focus session:', error);
     }
+  },
+
+  // Gamification actions
+  calculateUserStats: (userId: string) => {
+    const { focusSessions, tasks } = get();
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(now.getDate() - 30); // Last 30 days
+
+    // Filter sessions for the user and time range
+    const userSessions = focusSessions.filter(session => {
+      const sessionDate = new Date(session.startTime);
+      return sessionDate >= startDate && sessionDate <= now && session.type === 'work';
+    });
+
+    // Calculate total hours
+    const totalMinutes = userSessions.reduce((total, session) => 
+      total + Math.round(session.durationSec / 60), 0
+    );
+    const totalHours = totalMinutes / 60;
+
+    // Calculate streak
+    let streak = 0;
+    const today = new Date();
+    
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date();
+      checkDate.setDate(today.getDate() - i);
+      const dateStr = checkDate.toISOString().split('T')[0];
+      
+      const daySessions = focusSessions.filter(session => {
+        const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+        return sessionDate === dateStr && session.type === 'work';
+      });
+      
+      const dayMinutes = daySessions.reduce((total, session) => 
+        total + Math.round(session.durationSec / 60), 0
+      );
+      
+      if (dayMinutes > 0) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    // Calculate daily stats
+    const dailyStats = [];
+    const daysDiff = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    for (let i = daysDiff; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(now.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const daySessions = focusSessions.filter(session => {
+        const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+        return sessionDate === dateStr && session.type === 'work';
+      });
+      
+      const dayTasks = tasks.filter(task => task.date === dateStr);
+      
+      const workedHours = daySessions.reduce((total, session) => 
+        total + Math.round(session.durationSec / 60), 0
+      ) / 60;
+      
+      const completedTasks = dayTasks.filter(task => task.done).length;
+      const focusMinutes = daySessions.reduce((total, session) => 
+        total + Math.round(session.durationSec / 60), 0
+      );
+      
+      dailyStats.push({
+        date: dateStr,
+        workedHours,
+        completedTasks,
+        focusMinutes
+      });
+    }
+
+    return {
+      userId,
+      streak,
+      totalHours,
+      totalFocusMinutes: totalMinutes,
+      lastUpdate: now.toISOString(),
+      dailyStats
+    };
+  },
+
+  updateLeaderboard: async () => {
+    // This will be implemented to sync with Firestore
+    // For now, we'll just update local state
+    console.log('Updating leaderboard...');
+  },
+
+  loadGamificationData: async () => {
+    // This will load gamification data from Firestore
+    // For now, we'll just set up the structure
+    const gamificationData: GamificationData = {
+      leaderboard: [],
+      userStats: [],
+      lastUpdated: new Date().toISOString()
+    };
+    
+    set({ gamification: gamificationData });
   }
 
   };

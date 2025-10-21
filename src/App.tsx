@@ -10,6 +10,7 @@ import { TasksPage } from './pages/TasksPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { ReflectionPage } from './pages/ReflectionPage';
 import { StatsPage } from './pages/StatsPage';
+import { GamificationPage } from './pages/GamificationPage';
 
 function AppContent() {
   const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync } = useStore();
@@ -58,6 +59,8 @@ function AppContent() {
         return <ReflectionPage />;
       case 'stats':
         return <StatsPage />;
+      case 'gamification':
+        return <GamificationPage />;
       default:
         return <Dashboard />;
     }

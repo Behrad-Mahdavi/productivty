@@ -66,6 +66,38 @@ export interface TimerSettings {
   cyclesBeforeLongBreak: number;
 }
 
+export interface DailyStat {
+  date: string; // YYYY-MM-DD
+  workedHours: number;
+  completedTasks: number;
+  focusMinutes: number;
+}
+
+export interface UserStats {
+  userId: string;
+  streak: number; // تعداد روزهای متوالی فعالیت
+  totalHours: number;
+  totalFocusMinutes: number;
+  lastUpdate: string;
+  dailyStats: DailyStat[];
+  rank?: number; // رتبه در leaderboard
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  userName: string;
+  totalHours: number;
+  streak: number;
+  rank: number;
+  avatar?: string;
+}
+
+export interface GamificationData {
+  leaderboard: LeaderboardEntry[];
+  userStats: UserStats[];
+  lastUpdated: string;
+}
+
 export interface AppData {
   tasks: Task[];
   courses: Course[];
@@ -73,4 +105,5 @@ export interface AppData {
   focusSessions: FocusSession[];
   timerState?: TimerState;
   timerSettings?: TimerSettings;
+  gamification?: GamificationData;
 }
