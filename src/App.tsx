@@ -12,18 +12,22 @@ import { ReflectionPage } from './pages/ReflectionPage';
 import { StatsPage } from './pages/StatsPage';
 
 function AppContent() {
-  const { loadAppData, setCurrentUserId } = useStore();
+  const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync } = useStore();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const { isLoggedIn, loading, currentUser } = useUser();
 
   useEffect(() => {
     if (isLoggedIn && currentUser) {
+      console.log('User logged in, setting up sync for:', currentUser.id);
       setCurrentUserId(currentUser.id);
       loadAppData(currentUser.id);
+      setupRealtimeSync(currentUser.id);
     } else {
+      console.log('User logged out, cleaning up sync');
       setCurrentUserId(null);
+      cleanupRealtimeSync();
     }
-  }, [loadAppData, isLoggedIn, currentUser, setCurrentUserId]);
+  }, [loadAppData, isLoggedIn, currentUser, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync]);
 
   if (loading) {
     return (

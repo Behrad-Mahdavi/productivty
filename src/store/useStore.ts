@@ -6,7 +6,11 @@ import {
   saveCourses, 
   saveReflections, 
   saveTimerState,
-  loadTimerState
+  loadTimerState,
+  subscribeToTasks,
+  subscribeToCourses,
+  subscribeToReflections,
+  subscribeToFocusSessions
 } from '../utils/storage';
 import { 
   createTimerState, 
@@ -29,6 +33,8 @@ interface AppStore {
   // Actions
   setCurrentUserId: (userId: string | null) => void;
   loadAppData: (userId: string) => Promise<void>;
+  setupRealtimeSync: (userId: string) => void;
+  cleanupRealtimeSync: () => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
@@ -60,22 +66,71 @@ interface AppStore {
   getOverdueAssignments: () => Assignment[];
 }
 
-export const useStore = create<AppStore>((set, get) => ({
-  // Initial state
-  tasks: [],
-  courses: [],
-  reflections: [],
-  focusSessions: [],
-  timerState: null,
-  currentUserId: null,
+export const useStore = create<AppStore>((set, get) => {
+  let unsubscribeFunctions: (() => void)[] = [];
+
+  return {
+    // Initial state
+    tasks: [],
+    courses: [],
+    reflections: [],
+    focusSessions: [],
+    timerState: null,
+    currentUserId: null,
   
   setCurrentUserId: (userId: string | null) => {
     set({ currentUserId: userId });
+  },
+
+  setupRealtimeSync: (userId: string) => {
+    console.log('Setting up real-time sync for user:', userId);
+    
+    // Clean up existing subscriptions
+    get().cleanupRealtimeSync();
+    
+    // Subscribe to tasks
+    const unsubscribeTasks = subscribeToTasks(userId, (tasks) => {
+      console.log('Real-time tasks update received:', tasks.length);
+      set({ tasks });
+    });
+    
+    // Subscribe to courses
+    const unsubscribeCourses = subscribeToCourses(userId, (courses) => {
+      console.log('Real-time courses update received:', courses.length);
+      set({ courses });
+    });
+    
+    // Subscribe to reflections
+    const unsubscribeReflections = subscribeToReflections(userId, (reflections) => {
+      console.log('Real-time reflections update received:', reflections.length);
+      set({ reflections });
+    });
+    
+    // Subscribe to focus sessions
+    const unsubscribeFocusSessions = subscribeToFocusSessions(userId, (sessions) => {
+      console.log('Real-time focus sessions update received:', sessions.length);
+      set({ focusSessions: sessions });
+    });
+    
+    // Store unsubscribe functions
+    unsubscribeFunctions = [
+      unsubscribeTasks,
+      unsubscribeCourses,
+      unsubscribeReflections,
+      unsubscribeFocusSessions
+    ];
+  },
+
+  cleanupRealtimeSync: () => {
+    console.log('Cleaning up real-time sync subscriptions');
+    unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+    unsubscribeFunctions = [];
   },
   
   // Load data from Firestore
   loadAppData: async (userId: string) => {
     try {
+      console.log('Loading app data for user:', userId);
       const data = await loadData(userId);
       const timerState = await loadTimerState(userId);
       
@@ -105,6 +160,7 @@ export const useStore = create<AppStore>((set, get) => ({
         }
       }
       
+      console.log('Setting app data:', data);
       set({ 
         ...data, 
         timerState,
@@ -120,6 +176,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const { currentUserId } = get();
     if (!currentUserId) return;
     
+    console.log('Adding task to Firestore:', taskData);
     const newTask: Task = {
       ...taskData,
       id: `task_${Date.now()}`,
@@ -128,6 +185,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const updatedTasks = [...get().tasks, newTask];
     set({ tasks: updatedTasks });
     await saveTasks(currentUserId, updatedTasks);
+    console.log('Task saved to Firestore');
   },
   
   updateTask: async (id, updates) => {
@@ -395,4 +453,5 @@ export const useStore = create<AppStore>((set, get) => ({
     return overdue;
   },
 
-}));
+  };
+});

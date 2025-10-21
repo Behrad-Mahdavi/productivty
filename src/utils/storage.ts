@@ -7,7 +7,9 @@ import {
   updateDoc, 
   deleteDoc,
   query,
-  where
+  where,
+  onSnapshot,
+  type Unsubscribe
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Task, Course, Reflection, FocusSession, TimerState, AppData } from '../types';
@@ -347,4 +349,108 @@ export const loadTimerState = async (userId: string): Promise<TimerState> => {
     cyclesCompleted: 0,
     isPaused: false
   };
+};
+
+// Real-time sync functions
+export const subscribeToTasks = (userId: string, callback: (tasks: Task[]) => void): Unsubscribe => {
+  console.log('Subscribing to tasks for user:', userId);
+  return onSnapshot(
+    query(collection(db, COLLECTIONS.TASKS), where('userId', '==', userId)),
+    (snapshot) => {
+      const tasks: Task[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        tasks.push({
+          id: doc.id,
+          title: data.title,
+          category: data.category || 'شخصی',
+          date: data.date || new Date().toISOString().split('T')[0],
+          done: data.done,
+          createdAt: data.createdAt
+        });
+      });
+      console.log('Real-time tasks update:', tasks.length);
+      callback(tasks);
+    },
+    (error) => {
+      console.error('Error in tasks subscription:', error);
+    }
+  );
+};
+
+export const subscribeToCourses = (userId: string, callback: (courses: Course[]) => void): Unsubscribe => {
+  console.log('Subscribing to courses for user:', userId);
+  return onSnapshot(
+    query(collection(db, COLLECTIONS.COURSES), where('userId', '==', userId)),
+    (snapshot) => {
+      const courses: Course[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        courses.push({
+          id: doc.id,
+          name: data.name,
+          code: data.code,
+          instructor: data.instructor,
+          assignments: data.assignments || []
+        });
+      });
+      console.log('Real-time courses update:', courses.length);
+      callback(courses);
+    },
+    (error) => {
+      console.error('Error in courses subscription:', error);
+    }
+  );
+};
+
+export const subscribeToReflections = (userId: string, callback: (reflections: Reflection[]) => void): Unsubscribe => {
+  console.log('Subscribing to reflections for user:', userId);
+  return onSnapshot(
+    query(collection(db, COLLECTIONS.REFLECTIONS), where('userId', '==', userId)),
+    (snapshot) => {
+      const reflections: Reflection[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        reflections.push({
+          date: data.date,
+          good: data.good,
+          distraction: data.distraction,
+          improve: data.improve,
+          focusMinutes: data.focusMinutes
+        });
+      });
+      console.log('Real-time reflections update:', reflections.length);
+      callback(reflections);
+    },
+    (error) => {
+      console.error('Error in reflections subscription:', error);
+    }
+  );
+};
+
+export const subscribeToFocusSessions = (userId: string, callback: (sessions: FocusSession[]) => void): Unsubscribe => {
+  console.log('Subscribing to focus sessions for user:', userId);
+  return onSnapshot(
+    query(collection(db, COLLECTIONS.FOCUS_SESSIONS), where('userId', '==', userId)),
+    (snapshot) => {
+      const sessions: FocusSession[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        sessions.push({
+          id: doc.id,
+          taskId: data.taskId,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          durationSec: data.durationSec,
+          completed: data.completed,
+          type: data.type
+        });
+      });
+      console.log('Real-time focus sessions update:', sessions.length);
+      callback(sessions);
+    },
+    (error) => {
+      console.error('Error in focus sessions subscription:', error);
+    }
+  );
 };
