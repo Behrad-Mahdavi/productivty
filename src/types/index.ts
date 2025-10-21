@@ -13,11 +13,14 @@ export interface Assignment {
   dueDate: string;
   done: boolean;
   courseId: string;
+  description?: string;
 }
 
 export interface Course {
   id: string;
   name: string;
+  code: string;
+  instructor: string;
   assignments: Assignment[];
 }
 

@@ -9,7 +9,6 @@ export const CoursesPage: React.FC = () => {
   const { courses, addCourse, deleteCourse, addAssignment, updateAssignment } = useStore();
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [newCourse, setNewCourse] = useState({ name: '', code: '', instructor: '' });
   const [newAssignment, setNewAssignment] = useState({ 

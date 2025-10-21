@@ -6,7 +6,7 @@ import { PersianDatePicker } from '../components/PersianDatePicker';
 import moment from 'moment-jalaali';
 
 export const ReflectionPage: React.FC = () => {
-  const { reflections, addReflection, updateReflection, deleteReflection, getFocusMinutesToday } = useStore();
+  const { reflections, addReflection, deleteReflection, getFocusMinutesToday } = useStore();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showForm, setShowForm] = useState(false);
   const [editingReflection, setEditingReflection] = useState<string | null>(null);

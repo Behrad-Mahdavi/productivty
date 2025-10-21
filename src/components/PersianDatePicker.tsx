@@ -6,6 +6,7 @@ interface PersianDatePickerProps {
   value: string;
   onChange: (date: string) => void;
   label?: string;
+  placeholder?: string;
 }
 
 export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({

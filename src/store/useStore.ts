@@ -42,6 +42,7 @@ interface AppStore {
   addReflection: (reflection: Reflection) => void;
   updateReflection: (date: string, updates: Partial<Reflection>) => void;
   getReflection: (date: string) => Reflection | undefined;
+  deleteReflection: (date: string) => void;
   
   // Timer actions
   startTimer: (mode: 'work' | 'shortBreak' | 'longBreak', taskId?: string) => void;
