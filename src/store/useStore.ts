@@ -72,6 +72,8 @@ interface AppStore {
   // Timer settings actions
   updateTimerSettings: (settings: Partial<TimerSettings>) => Promise<void>;
   addFocusSession: (minutes: number) => Promise<void>;
+  updateFocusSession: (sessionId: string, minutes: number) => Promise<void>;
+  deleteFocusSession: (sessionId: string) => Promise<void>;
 }
 
 export const useStore = create<AppStore>((set, get) => {
@@ -621,6 +623,49 @@ export const useStore = create<AppStore>((set, get) => {
       await saveFocusSessions(currentUserId, updatedSessions);
     } catch (error) {
       console.error('Error saving manual focus session:', error);
+    }
+  },
+
+  updateFocusSession: async (sessionId: string, minutes: number) => {
+    const { currentUserId } = get();
+    if (!currentUserId || minutes <= 0) return;
+    
+    const sessions = get().focusSessions;
+    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+    if (sessionIndex === -1) return;
+    
+    const session = sessions[sessionIndex];
+    const updatedSession = {
+      ...session,
+      durationSec: minutes * 60,
+      endTime: new Date(new Date(session.startTime).getTime() + minutes * 60 * 1000).toISOString()
+    };
+    
+    const updatedSessions = [...sessions];
+    updatedSessions[sessionIndex] = updatedSession;
+    set({ focusSessions: updatedSessions });
+    
+    // Save to Firestore
+    try {
+      await saveFocusSessions(currentUserId, updatedSessions);
+    } catch (error) {
+      console.error('Error updating focus session:', error);
+    }
+  },
+
+  deleteFocusSession: async (sessionId: string) => {
+    const { currentUserId } = get();
+    if (!currentUserId) return;
+    
+    const sessions = get().focusSessions;
+    const updatedSessions = sessions.filter(s => s.id !== sessionId);
+    set({ focusSessions: updatedSessions });
+    
+    // Save to Firestore
+    try {
+      await saveFocusSessions(currentUserId, updatedSessions);
+    } catch (error) {
+      console.error('Error deleting focus session:', error);
     }
   }
 

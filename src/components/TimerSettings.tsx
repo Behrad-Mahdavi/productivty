@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Settings, Save, RotateCcw, Plus } from 'lucide-react';
+import { Settings, Save, RotateCcw, Plus, Edit, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 export const TimerSettings: React.FC = () => {
-  const { timerSettings, updateTimerSettings, addFocusSession } = useStore();
+  const { timerSettings, updateTimerSettings, addFocusSession, focusSessions, updateFocusSession, deleteFocusSession } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [manualMinutes, setManualMinutes] = useState(0);
+  const [editingSession, setEditingSession] = useState<string | null>(null);
+  const [editMinutes, setEditMinutes] = useState(0);
   
   console.log('TimerSettings component rendered');
   const [settings, setSettings] = useState({
@@ -33,6 +35,30 @@ export const TimerSettings: React.FC = () => {
     if (manualMinutes > 0) {
       await addFocusSession(manualMinutes);
       setManualMinutes(0);
+    }
+  };
+
+  const handleEditSession = (sessionId: string, currentMinutes: number) => {
+    setEditingSession(sessionId);
+    setEditMinutes(currentMinutes);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingSession && editMinutes > 0) {
+      await updateFocusSession(editingSession, editMinutes);
+      setEditingSession(null);
+      setEditMinutes(0);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSession(null);
+    setEditMinutes(0);
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (confirm('آیا مطمئن هستید که می‌خواهید این تمرین را حذف کنید؟')) {
+      await deleteFocusSession(sessionId);
     }
   };
 
@@ -93,6 +119,79 @@ export const TimerSettings: React.FC = () => {
                     <small className="text-muted">
                       برای زمانی که تایمر رو فراموش کردید و می‌خواید دستی تمرین رو ثبت کنید
                     </small>
+                  </div>
+                </div>
+
+                {/* Recent Sessions Section */}
+                <div className="card mb-4">
+                  <div className="card-header">
+                    <h6 className="mb-0">تمرین‌های اخیر</h6>
+                  </div>
+                  <div className="card-body">
+                    {focusSessions.length === 0 ? (
+                      <p className="text-muted text-center">هنوز تمرینی ثبت نشده</p>
+                    ) : (
+                      <div className="list-group">
+                        {focusSessions.slice(-5).reverse().map((session) => (
+                          <div key={session.id} className="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                              <div className="fw-medium">
+                                {Math.round(session.durationSec / 60)} دقیقه تمرکز
+                              </div>
+                              <small className="text-muted">
+                                {new Date(session.startTime).toLocaleDateString('fa-IR')} - 
+                                {new Date(session.startTime).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
+                              </small>
+                            </div>
+                            <div className="d-flex gap-2">
+                              {editingSession === session.id ? (
+                                <div className="d-flex gap-2">
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm"
+                                    style={{ width: '80px' }}
+                                    min="1"
+                                    max="480"
+                                    value={editMinutes}
+                                    onChange={(e) => setEditMinutes(parseInt(e.target.value) || 0)}
+                                  />
+                                  <button
+                                    className="btn btn-success btn-sm"
+                                    onClick={handleSaveEdit}
+                                    disabled={editMinutes <= 0}
+                                  >
+                                    <Save size={14} />
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={handleCancelEdit}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <button
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => handleEditSession(session.id, Math.round(session.durationSec / 60))}
+                                    title="ویرایش"
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                  <button
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => handleDeleteSession(session.id)}
+                                    title="حذف"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
