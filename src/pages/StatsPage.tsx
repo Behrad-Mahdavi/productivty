@@ -18,6 +18,12 @@ export const StatsPage: React.FC = () => {
   const [todayNote, setTodayNote] = useState('');
   const [todayRating, setTodayRating] = useState(0);
 
+  // Debug logs
+  console.log('StatsPage - tasks:', tasks.length);
+  console.log('StatsPage - reflections:', reflections.length);
+  console.log('StatsPage - focusSessions:', focusSessions.length);
+  console.log('StatsPage - focusSessions data:', focusSessions);
+
   // محاسبه آمار بر اساس بازه زمانی انتخاب شده
   const getDateRange = () => {
     const endDate = new Date();
