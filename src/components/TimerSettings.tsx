@@ -5,6 +5,8 @@ import { useStore } from '../store/useStore';
 export const TimerSettings: React.FC = () => {
   const { timerSettings, updateTimerSettings } = useStore();
   const [isOpen, setIsOpen] = useState(false);
+  
+  console.log('TimerSettings component rendered');
   const [settings, setSettings] = useState({
     workDuration: timerSettings.workDuration,
     shortBreakDuration: timerSettings.shortBreakDuration,
