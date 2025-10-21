@@ -11,10 +11,9 @@ import { CoursesPage } from './pages/CoursesPage';
 import { ReflectionPage } from './pages/ReflectionPage';
 import { StatsPage } from './pages/StatsPage';
 import { GamificationPage } from './pages/GamificationPage';
-import { UsersPage } from './pages/UsersPage';
 
 function AppContent() {
-  const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync } = useStore();
+  const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync, loadGamificationData } = useStore();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const { isLoggedIn, loading, currentUser } = useUser();
 
@@ -24,12 +23,13 @@ function AppContent() {
       setCurrentUserId(currentUser.id);
       loadAppData(currentUser.id);
       setupRealtimeSync(currentUser.id);
+      loadGamificationData(currentUser.id);
     } else {
       console.log('User logged out, cleaning up sync');
       setCurrentUserId(null);
       cleanupRealtimeSync();
     }
-  }, [loadAppData, isLoggedIn, currentUser, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync]);
+  }, [loadAppData, isLoggedIn, currentUser, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync, loadGamificationData]);
 
   if (loading) {
     return (
@@ -62,8 +62,6 @@ function AppContent() {
         return <StatsPage />;
       case 'gamification':
         return <GamificationPage />;
-      case 'users':
-        return <UsersPage />;
       default:
         return <Dashboard />;
     }

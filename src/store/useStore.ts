@@ -755,7 +755,7 @@ export const useStore = create<AppStore>((set, get) => {
 
     return {
       userId,
-      userName: 'کاربر', // این باید از context بیاد
+      userName: 'کاربر', // این باید از context کاربر بیاد
       streak,
       totalHours,
       totalFocusMinutes: totalMinutes,
@@ -765,21 +765,37 @@ export const useStore = create<AppStore>((set, get) => {
   },
 
   updateLeaderboard: async () => {
-    // This will be implemented to sync with Firestore
-    // For now, we'll just update local state
-    console.log('Updating leaderboard...');
+    const { currentUserId } = get();
+    if (!currentUserId) return;
+    
+    try {
+      const { updateLeaderboard } = await import('../utils/gamificationStorage');
+      await updateLeaderboard();
+      console.log('Leaderboard updated successfully');
+    } catch (error) {
+      console.error('Error updating leaderboard:', error);
+    }
   },
 
-  loadGamificationData: async () => {
-    // This will load gamification data from Firestore
-    // For now, we'll just set up the structure
-    const gamificationData: GamificationData = {
-      leaderboard: [],
-      userStats: [],
-      lastUpdated: new Date().toISOString()
-    };
-    
-    set({ gamification: gamificationData });
+  loadGamificationData: async (_userId: string) => {
+    try {
+      const { getAllUserStats, getLeaderboard } = await import('../utils/gamificationStorage');
+      
+      const [userStats, leaderboard] = await Promise.all([
+        getAllUserStats(),
+        getLeaderboard()
+      ]);
+      
+      const gamificationData: GamificationData = {
+        leaderboard,
+        userStats,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      set({ gamification: gamificationData });
+    } catch (error) {
+      console.error('Error loading gamification data:', error);
+    }
   }
 
   };

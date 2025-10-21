@@ -11,7 +11,7 @@ import {
 import { useStore } from '../store/useStore';
 import { useUser } from '../contexts/UserContext';
 import type { LeaderboardEntry, UserStats } from '../types';
-import { saveUserStats, getAllUserStats, calculateLeaderboard } from '../utils/gamificationStorage';
+import { saveUserStats, getAllUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard } from '../utils/gamificationStorage';
 
 export const GamificationDashboard: React.FC = () => {
   const { currentUser } = useUser();
@@ -128,18 +128,38 @@ export const GamificationDashboard: React.FC = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    // دریافت آمار همه کاربران
-    const allUserStats = getAllUserStats();
-    
-    if (allUserStats.length === 0) {
-      setLeaderboard([]);
-      return;
-    }
+    const loadLeaderboard = async () => {
+      try {
+        // دریافت آمار همه کاربران
+        const allUserStats = await getAllUserStats();
+        
+        if (allUserStats.length === 0) {
+          setLeaderboard([]);
+          return;
+        }
 
-    // محاسبه leaderboard
-    const leaderboard = calculateLeaderboard(allUserStats);
-    setLeaderboard(leaderboard);
-  }, [currentUser, userStats]);
+        // محاسبه leaderboard
+        const leaderboard = calculateLeaderboard(allUserStats);
+        setLeaderboard(leaderboard);
+        
+        // به‌روزرسانی leaderboard در Firestore
+        await updateLeaderboard();
+      } catch (error) {
+        console.error('Error loading leaderboard:', error);
+      }
+    };
+
+    loadLeaderboard();
+  }, [currentUser]);
+
+  // Subscribe to real-time leaderboard updates
+  useEffect(() => {
+    const unsubscribe = subscribeToLeaderboard((leaderboard) => {
+      setLeaderboard(leaderboard);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const formatTime = (hours: number) => {
     const h = Math.floor(hours);
