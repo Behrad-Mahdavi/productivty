@@ -78,7 +78,7 @@ export const loadData = async (userId: string): Promise<AppData> => {
       const data = doc.data();
       focusSessions.push({
         id: doc.id,
-        taskId: data.taskId,
+        taskId: data.taskId || undefined,
         startTime: data.startTime,
         endTime: data.endTime,
         durationSec: data.durationSec,
@@ -271,15 +271,19 @@ export const saveFocusSessions = async (userId: string, focusSessions: FocusSess
     });
 
     for (const session of focusSessions) {
-      const sessionData = {
+      const sessionData: any = {
         userId,
-        taskId: session.taskId,
         startTime: session.startTime,
         endTime: session.endTime,
         durationSec: session.durationSec,
         completed: session.completed,
         type: session.type
       };
+      
+      // Only add taskId if it exists
+      if (session.taskId) {
+        sessionData.taskId = session.taskId;
+      }
 
       if (existingSessions.has(session.id)) {
         await updateDoc(doc(db, COLLECTIONS.FOCUS_SESSIONS, session.id), sessionData);
@@ -444,7 +448,7 @@ export const subscribeToFocusSessions = (userId: string, callback: (sessions: Fo
         const data = doc.data();
         sessions.push({
           id: doc.id,
-          taskId: data.taskId,
+          taskId: data.taskId || undefined,
           startTime: data.startTime,
           endTime: data.endTime,
           durationSec: data.durationSec,
