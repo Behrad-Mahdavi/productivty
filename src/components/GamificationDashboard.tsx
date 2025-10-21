@@ -11,7 +11,7 @@ import {
 import { useStore } from '../store/useStore';
 import { useUser } from '../contexts/UserContext';
 import type { LeaderboardEntry, UserStats } from '../types';
-import { saveUserStats, getAllUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard, createSampleUsers } from '../utils/gamificationStorage';
+import { saveUserStats, getAllUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard } from '../utils/gamificationStorage';
 
 export const GamificationDashboard: React.FC = () => {
   const { currentUser } = useUser();
@@ -133,17 +133,10 @@ export const GamificationDashboard: React.FC = () => {
         // دریافت آمار همه کاربران
         const allUserStats = await getAllUserStats();
         
-        // اگر هیچ کاربری وجود نداره، کاربران نمونه ایجاد کن
+        // اگر هیچ کاربری وجود نداره، فقط کاربر فعلی رو نمایش بده
         if (allUserStats.length === 0) {
-          console.log('No user stats found, creating sample users...');
-          await createSampleUsers();
-          // دوباره تلاش کن
-          const newUserStats = await getAllUserStats();
-          if (newUserStats.length > 0) {
-            const leaderboard = calculateLeaderboard(newUserStats);
-            setLeaderboard(leaderboard);
-            await updateLeaderboard();
-          }
+          console.log('No other users found, showing only current user');
+          setLeaderboard([]);
           return;
         }
 
@@ -201,24 +194,14 @@ export const GamificationDashboard: React.FC = () => {
             <h1 className="h2 mb-2 fw-bold text-dark">🏆 رقابت دوستان</h1>
             <p className="text-muted mb-4">ببینید چه کسی بیشتر کار می‌کند!</p>
             
-            {/* دکمه ایجاد کاربران نمونه */}
-            <button
-              className="btn btn-outline-primary btn-sm mb-3"
-              onClick={async () => {
-                try {
-                  await createSampleUsers();
-                  // Reload leaderboard
-                  const allUserStats = await getAllUserStats();
-                  const leaderboard = calculateLeaderboard(allUserStats);
-                  setLeaderboard(leaderboard);
-                  await updateLeaderboard();
-                } catch (error) {
-                  console.error('Error creating sample users:', error);
-                }
-              }}
-            >
-              ایجاد کاربران نمونه برای تست
-            </button>
+            {/* راهنمای استفاده */}
+            <div className="alert alert-info mb-3">
+              <h6 className="alert-heading">🏆 نحوه رقابت با دوستان</h6>
+              <p className="mb-0">
+                برای رقابت با دوستانتان، آنها باید با همان اکانت Firebase وارد شوند. 
+                آمار همه کاربران به صورت خودکار sync می‌شود و در جدول رتبه‌بندی نمایش داده می‌شود.
+              </p>
+            </div>
             
             <div className="btn-group" role="group">
               <button
@@ -355,8 +338,18 @@ export const GamificationDashboard: React.FC = () => {
                             <td colSpan={5} className="text-center text-muted py-4">
                               <div className="d-flex flex-column align-items-center">
                                 <Trophy className="mb-2" size={32} />
-                                <p className="mb-0">هنوز داده‌ای برای نمایش وجود ندارد</p>
-                                <small>شروع کنید تا در جدول رتبه‌بندی قرار بگیرید!</small>
+                                <p className="mb-0">هنوز کاربر دیگری برای رقابت وجود ندارد</p>
+                                <small>دوستتان را دعوت کنید تا با هم رقابت کنید!</small>
+                                <div className="mt-3">
+                                  <div className="alert alert-light border">
+                                    <h6 className="alert-heading">💡 راهنمای دعوت دوستان</h6>
+                                    <ol className="mb-0 text-start">
+                                      <li>دوستتان باید با همان Firebase project وارد شود</li>
+                                      <li>هر دو باید focus sessions انجام دهید</li>
+                                      <li>آمار به صورت خودکار sync می‌شود</li>
+                                    </ol>
+                                  </div>
+                                </div>
                               </div>
                             </td>
                           </tr>
