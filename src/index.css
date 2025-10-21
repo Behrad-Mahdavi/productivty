@@ -507,9 +507,11 @@ h1, h2, h3, h4, h5, h6 {
 .heatmap-cell {
   width: 100%;
   height: 20px;
-  border-radius: 2px;
+  border-radius: 3px;
   transition: all 0.2s ease;
   cursor: pointer;
+  min-width: 12px;
+  min-height: 20px;
 }
 
 .heatmap-cell:hover {

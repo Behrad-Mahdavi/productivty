@@ -325,14 +325,19 @@ export const StatsPage: React.FC = () => {
                           <div key={dayIndex} className="heatmap-row">
                             {Array.from({ length: 24 }, (_, hourIndex) => {
                               const hour = hourlyFocusStats[hourIndex];
-                              const intensity = Math.min(1, hour.minutes / 60); // Normalize to 0-1
+                              const intensity = Math.min(1, hour.minutes / 30); // Normalize to 0-1 (30 min max)
+                              const hasData = hour.minutes > 0;
+                              
                               return (
                                 <div
                                   key={hourIndex}
                                   className="heatmap-cell"
                                   style={{
-                                    backgroundColor: `rgba(34, 197, 94, ${intensity})`,
-                                    opacity: intensity > 0 ? 0.3 + (intensity * 0.7) : 0.1
+                                    backgroundColor: hasData 
+                                      ? `rgba(34, 197, 94, ${Math.max(0.3, intensity)})` 
+                                      : 'rgba(240, 240, 240, 0.3)',
+                                    border: hasData ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(200, 200, 200, 0.3)',
+                                    opacity: hasData ? 1 : 0.5
                                   }}
                                   title={`${hour.label}: ${hour.minutes} دقیقه`}
                                 ></div>
