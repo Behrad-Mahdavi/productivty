@@ -55,6 +55,7 @@ export const getAllUserStats = async (): Promise<UserStats[]> => {
       userStats.push(data as UserStats);
     });
     
+    console.log('Loaded user stats from database:', userStats.length, 'users');
     return userStats;
   } catch (error) {
     console.error('Error getting all user stats:', error);
@@ -140,46 +141,125 @@ export const updateLeaderboard = async (): Promise<void> => {
   }
 };
 
-// ایجاد کاربران نمونه برای تست
-export const createSampleUsers = async (): Promise<void> => {
+// محاسبه آمار همه کاربران از focus sessions واقعی
+export const calculateAllUsersStats = async (): Promise<UserStats[]> => {
   try {
-    const sampleUsers: UserStats[] = [
-      {
-        userId: 'sample_user_1',
-        userName: 'بهراد',
-        streak: 12,
-        totalHours: 45.5,
-        totalFocusMinutes: 2730,
-        lastUpdate: new Date().toISOString(),
-        dailyStats: []
-      },
-      {
-        userId: 'sample_user_2',
-        userName: 'رادمان',
-        streak: 8,
-        totalHours: 38.2,
-        totalFocusMinutes: 2292,
-        lastUpdate: new Date().toISOString(),
-        dailyStats: []
-      },
-      {
-        userId: 'sample_user_3',
-        userName: 'مهدیسا',
-        streak: 15,
-        totalHours: 32.1,
-        totalFocusMinutes: 1926,
-        lastUpdate: new Date().toISOString(),
-        dailyStats: []
+    // دریافت همه focus sessions از همه کاربران
+    const focusSessionsSnapshot = await getDocs(collection(db, 'focusSessions'));
+    const allFocusSessions = focusSessionsSnapshot.docs.map(doc => doc.data());
+    
+    // دریافت همه tasks از همه کاربران  
+    const tasksSnapshot = await getDocs(collection(db, 'tasks'));
+    const allTasks = tasksSnapshot.docs.map(doc => doc.data());
+    
+    // گروه‌بندی sessions بر اساس userId
+    const userSessionsMap = new Map<string, any[]>();
+    const userTasksMap = new Map<string, any[]>();
+    
+    allFocusSessions.forEach(session => {
+      if (session.userId) {
+        if (!userSessionsMap.has(session.userId)) {
+          userSessionsMap.set(session.userId, []);
+        }
+        userSessionsMap.get(session.userId)!.push(session);
       }
-    ];
-
-    // ذخیره کاربران نمونه
-    for (const user of sampleUsers) {
-      await saveUserStats(user.userId, user);
+    });
+    
+    allTasks.forEach(task => {
+      if (task.userId) {
+        if (!userTasksMap.has(task.userId)) {
+          userTasksMap.set(task.userId, []);
+        }
+        userTasksMap.get(task.userId)!.push(task);
+      }
+    });
+    
+    // محاسبه آمار برای هر کاربر
+    const allUserStats: UserStats[] = [];
+    
+    for (const [userId, sessions] of userSessionsMap) {
+      const userTasks = userTasksMap.get(userId) || [];
+      
+      // محاسبه مجموع ساعت‌ها
+      const totalMinutes = sessions
+        .filter(session => session.type === 'work' && session.completed)
+        .reduce((total, session) => total + Math.round(session.durationSec / 60), 0);
+      const totalHours = totalMinutes / 60;
+      
+      // محاسبه استریک
+      let streak = 0;
+      const today = new Date();
+      
+      for (let i = 0; i < 30; i++) {
+        const checkDate = new Date();
+        checkDate.setDate(today.getDate() - i);
+        const dateStr = checkDate.toISOString().split('T')[0];
+        
+        const daySessions = sessions.filter(session => {
+          const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+          return sessionDate === dateStr && session.type === 'work' && session.completed;
+        });
+        
+        const dayMinutes = daySessions.reduce((total, session) => 
+          total + Math.round(session.durationSec / 60), 0
+        );
+        
+        if (dayMinutes > 0) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      
+      // محاسبه آمار روزانه
+      const dailyStats = [];
+      const startDate = new Date();
+      startDate.setDate(today.getDate() - 30);
+      
+      for (let i = 30; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const daySessions = sessions.filter(session => {
+          const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+          return sessionDate === dateStr && session.type === 'work' && session.completed;
+        });
+        
+        const dayTasks = userTasks.filter(task => task.date === dateStr);
+        
+        const workedHours = daySessions.reduce((total, session) => 
+          total + Math.round(session.durationSec / 60), 0
+        ) / 60;
+        
+        const completedTasks = dayTasks.filter(task => task.done).length;
+        const focusMinutes = daySessions.reduce((total, session) => 
+          total + Math.round(session.durationSec / 60), 0
+        );
+        
+        dailyStats.push({
+          date: dateStr,
+          workedHours,
+          completedTasks,
+          focusMinutes
+        });
+      }
+      
+      allUserStats.push({
+        userId,
+        userName: `کاربر ${userId.slice(-4)}`, // نام موقت
+        streak,
+        totalHours,
+        totalFocusMinutes: totalMinutes,
+        lastUpdate: new Date().toISOString(),
+        dailyStats
+      });
     }
-
-    console.log('Sample users created successfully');
+    
+    console.log('Calculated stats for all users:', allUserStats.length);
+    return allUserStats;
   } catch (error) {
-    console.error('Error creating sample users:', error);
+    console.error('Error calculating all users stats:', error);
+    return [];
   }
 };

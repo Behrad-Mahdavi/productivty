@@ -11,7 +11,7 @@ import {
 import { useStore } from '../store/useStore';
 import { useUser } from '../contexts/UserContext';
 import type { LeaderboardEntry, UserStats } from '../types';
-import { saveUserStats, getAllUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard } from '../utils/gamificationStorage';
+import { saveUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard, calculateAllUsersStats } from '../utils/gamificationStorage';
 
 export const GamificationDashboard: React.FC = () => {
   const { currentUser } = useUser();
@@ -130,12 +130,12 @@ export const GamificationDashboard: React.FC = () => {
 
     const loadLeaderboard = async () => {
       try {
-        // دریافت آمار همه کاربران
-        const allUserStats = await getAllUserStats();
+        // محاسبه آمار همه کاربران از focus sessions واقعی
+        const allUserStats = await calculateAllUsersStats();
         
-        // اگر هیچ کاربری وجود نداره، فقط کاربر فعلی رو نمایش بده
+        // اگر هیچ کاربری وجود نداره، پیام مناسب نمایش بده
         if (allUserStats.length === 0) {
-          console.log('No other users found, showing only current user');
+          console.log('No users found in database');
           setLeaderboard([]);
           return;
         }
@@ -143,6 +143,11 @@ export const GamificationDashboard: React.FC = () => {
         // محاسبه leaderboard
         const leaderboard = calculateLeaderboard(allUserStats);
         setLeaderboard(leaderboard);
+        
+        // ذخیره آمار محاسبه شده در Firestore
+        for (const userStats of allUserStats) {
+          await saveUserStats(userStats.userId, userStats);
+        }
         
         // به‌روزرسانی leaderboard در Firestore
         await updateLeaderboard();
