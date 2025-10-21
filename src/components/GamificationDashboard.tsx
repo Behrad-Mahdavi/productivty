@@ -36,7 +36,7 @@ export const GamificationDashboard: React.FC = () => {
       // فیلتر کردن sessions بر اساس بازه زمانی
       const filteredSessions = focusSessions.filter(session => {
         const sessionDate = new Date(session.startTime);
-        return sessionDate >= startDate && sessionDate <= now && session.type === 'work';
+        return sessionDate >= startDate && sessionDate <= now && session.type === 'work' && session.completed;
       });
 
       // محاسبه مجموع ساعت‌ها
@@ -56,7 +56,7 @@ export const GamificationDashboard: React.FC = () => {
         
         const daySessions = focusSessions.filter(session => {
           const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
-          return sessionDate === dateStr && session.type === 'work';
+          return sessionDate === dateStr && session.type === 'work' && session.completed;
         });
         
         const dayMinutes = daySessions.reduce((total, session) => 
@@ -79,10 +79,10 @@ export const GamificationDashboard: React.FC = () => {
         date.setDate(now.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
         
-        const daySessions = focusSessions.filter(session => {
-          const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
-          return sessionDate === dateStr && session.type === 'work';
-        });
+      const daySessions = focusSessions.filter(session => {
+        const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+        return sessionDate === dateStr && session.type === 'work' && session.completed;
+      });
         
         const dayTasks = tasks.filter(task => task.date === dateStr);
         
@@ -117,53 +117,28 @@ export const GamificationDashboard: React.FC = () => {
     setUserStats(stats);
   }, [currentUser, focusSessions, tasks, timeRange]);
 
-  // شبیه‌سازی leaderboard (در آینده از Firestore می‌آید)
+  // محاسبه leaderboard بر اساس داده‌های واقعی
   useEffect(() => {
-    const mockLeaderboard: LeaderboardEntry[] = [
+    if (!currentUser || !userStats) return;
+
+    // فقط کاربر فعلی رو نمایش می‌دیم تا زمانی که multi-user support اضافه بشه
+    const realLeaderboard: LeaderboardEntry[] = [
       {
-        userId: 'user1',
-        userName: 'بهراد',
-        totalHours: 45.5,
-        streak: 12,
+        userId: currentUser.id,
+        userName: currentUser.name,
+        totalHours: userStats.totalHours,
+        streak: userStats.streak,
         rank: 1
-      },
-      {
-        userId: 'user2',
-        userName: 'رادمان',
-        totalHours: 38.2,
-        streak: 8,
-        rank: 2
-      },
-      {
-        userId: 'user3',
-        userName: 'مهدیسا',
-        totalHours: 32.1,
-        streak: 15,
-        rank: 3
       }
     ];
 
-    // اضافه کردن کاربر فعلی اگر در لیست نیست
-    if (currentUser && userStats) {
-      const currentUserEntry = mockLeaderboard.find(entry => entry.userId === currentUser.id);
-      if (!currentUserEntry) {
-        mockLeaderboard.push({
-          userId: currentUser.id,
-          userName: currentUser.name,
-          totalHours: userStats.totalHours,
-          streak: userStats.streak,
-          rank: mockLeaderboard.length + 1
-        });
-      }
-    }
-
     // مرتب‌سازی بر اساس totalHours
-    mockLeaderboard.sort((a, b) => b.totalHours - a.totalHours);
-    mockLeaderboard.forEach((entry, index) => {
+    realLeaderboard.sort((a, b) => b.totalHours - a.totalHours);
+    realLeaderboard.forEach((entry, index) => {
       entry.rank = index + 1;
     });
 
-    setLeaderboard(mockLeaderboard);
+    setLeaderboard(realLeaderboard);
   }, [currentUser, userStats]);
 
   const formatTime = (hours: number) => {
@@ -285,47 +260,59 @@ export const GamificationDashboard: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {leaderboard.map((entry) => (
-                          <tr 
-                            key={entry.userId}
-                            className={entry.userId === currentUser?.id ? 'table-primary' : ''}
-                          >
-                            <td className="fw-bold">
-                              {getRankIcon(entry.rank)}
-                            </td>
-                            <td>
-                              <div className="d-flex align-items-center">
-                                <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
-                                     style={{ width: '32px', height: '32px' }}>
-                                  <span className="text-white fw-bold">
-                                    {entry.userName.charAt(0)}
-                                  </span>
+                        {leaderboard.length > 0 ? (
+                          leaderboard.map((entry) => (
+                            <tr 
+                              key={entry.userId}
+                              className={entry.userId === currentUser?.id ? 'table-primary' : ''}
+                            >
+                              <td className="fw-bold">
+                                {getRankIcon(entry.rank)}
+                              </td>
+                              <td>
+                                <div className="d-flex align-items-center">
+                                  <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                       style={{ width: '32px', height: '32px' }}>
+                                    <span className="text-white fw-bold">
+                                      {entry.userName.charAt(0)}
+                                    </span>
+                                  </div>
+                                  <span className="fw-bold">{entry.userName}</span>
+                                  {entry.userId === currentUser?.id && (
+                                    <span className="badge bg-primary ms-2">شما</span>
+                                  )}
                                 </div>
-                                <span className="fw-bold">{entry.userName}</span>
-                                {entry.userId === currentUser?.id && (
-                                  <span className="badge bg-primary ms-2">شما</span>
-                                )}
+                              </td>
+                              <td>
+                                <span className="fw-bold text-success">
+                                  {formatTime(entry.totalHours)}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="d-flex align-items-center">
+                                  <Flame className="text-warning me-1" size={16} />
+                                  <span className="fw-bold">{entry.streak} روز</span>
+                                </div>
+                              </td>
+                              <td>
+                                {entry.rank === 1 && <span className="badge bg-warning text-dark">🥇 اول</span>}
+                                {entry.rank === 2 && <span className="badge bg-secondary">🥈 دوم</span>}
+                                {entry.rank === 3 && <span className="badge bg-warning">🥉 سوم</span>}
+                                {entry.rank > 3 && <span className="badge bg-light text-dark">#{entry.rank}</span>}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="text-center text-muted py-4">
+                              <div className="d-flex flex-column align-items-center">
+                                <Trophy className="mb-2" size={32} />
+                                <p className="mb-0">هنوز داده‌ای برای نمایش وجود ندارد</p>
+                                <small>شروع کنید تا در جدول رتبه‌بندی قرار بگیرید!</small>
                               </div>
-                            </td>
-                            <td>
-                              <span className="fw-bold text-success">
-                                {formatTime(entry.totalHours)}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="d-flex align-items-center">
-                                <Flame className="text-warning me-1" size={16} />
-                                <span className="fw-bold">{entry.streak} روز</span>
-                              </div>
-                            </td>
-                            <td>
-                              {entry.rank === 1 && <span className="badge bg-warning text-dark">🥇 اول</span>}
-                              {entry.rank === 2 && <span className="badge bg-secondary">🥈 دوم</span>}
-                              {entry.rank === 3 && <span className="badge bg-warning">🥉 سوم</span>}
-                              {entry.rank > 3 && <span className="badge bg-light text-dark">#{entry.rank}</span>}
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -400,7 +387,7 @@ export const GamificationDashboard: React.FC = () => {
                   </h5>
                   <p className="text-muted mb-0">
                     {userStats && userStats.totalHours > 0 
-                      ? `شما ${formatTime(userStats.totalHours)} کار کرده‌اید. ${leaderboard.find(l => l.userId === currentUser?.id)?.rank ? `رتبه شما: ${leaderboard.find(l => l.userId === currentUser?.id)?.rank}` : ''}`
+                      ? `شما ${formatTime(userStats.totalHours)} کار کرده‌اید و ${userStats.streak} روز متوالی فعالیت دارید!`
                       : 'اولین ساعت کار خود را شروع کنید!'
                     }
                   </p>
