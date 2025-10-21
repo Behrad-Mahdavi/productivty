@@ -4,9 +4,9 @@ import type { User } from '../types';
 interface UserContextType {
   currentUser: User | null;
   users: User[];
-  login: (userId: string, password: string) => boolean;
+  login: (userId: string, password: string) => Promise<boolean>;
   logout: () => void;
-  addUser: (name: string, password: string) => string;
+  addUser: (name: string, password: string) => Promise<string>;
   switchUser: (userId: string) => void;
   isLoggedIn: boolean;
 }

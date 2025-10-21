@@ -14,7 +14,7 @@ import { StatsPage } from './pages/StatsPage';
 function AppContent() {
   const { loadAppData } = useStore();
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const { isLoggedIn, currentUser } = useUser();
+  const { isLoggedIn } = useUser();
 
   useEffect(() => {
     if (isLoggedIn) {

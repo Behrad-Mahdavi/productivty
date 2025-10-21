@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 export const UserSelector: React.FC = () => {
