@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
-import moment from 'moment-jalaali';
+import { formatPersianDate, getPersianYear } from '../utils/dateUtils';
 
 interface DateDisplayProps {
   date?: Date;
@@ -13,12 +13,14 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
   showTime = false,
   variant = 'default'
 }) => {
-  const jalaaliDate = moment(date);
-  
-  // استفاده از format برای نمایش تاریخ شمسی
-  const fullDate = jalaaliDate.format('dddd، jD jMMMM jYYYY');
-  const compactDate = jalaaliDate.format('jYYYY/jMM/jDD');
-  const time = jalaaliDate.format('HH:mm');
+  // استفاده از utility functions برای نمایش تاریخ شمسی
+  const fullDate = formatPersianDate(date, 'full');
+  const compactDate = formatPersianDate(date, 'compact');
+  const year = getPersianYear(date);
+  const time = new Date(date).toLocaleTimeString('fa-IR', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
 
   if (variant === 'card') {
     return (
@@ -29,7 +31,7 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
             <span className="fw-bold">{fullDate.split('،')[0]}</span>
           </div>
           <div className="h4 mb-1 fw-bold">{fullDate.split('،')[1]?.trim()}</div>
-          <div className="small opacity-75">{jalaaliDate.format('jYYYY')}</div>
+          <div className="small opacity-75">{year}</div>
           {showTime && (
             <div className="d-flex align-items-center justify-content-center mt-2 pt-2 border-top border-white border-opacity-25">
               <Clock size={14} className="me-1" />
@@ -65,7 +67,7 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
         <span className="h5 mb-0 fw-bold text-dark">{fullDate.split('،')[0]}</span>
       </div>
       <div className="h3 mb-1 fw-bold text-primary">{fullDate.split('،')[1]?.trim()}</div>
-      <div className="text-muted">{jalaaliDate.format('jYYYY')}</div>
+      <div className="text-muted">{year}</div>
       {showTime && (
         <div className="d-flex align-items-center justify-content-center mt-2">
           <Clock size={16} className="me-2 text-muted" />

@@ -10,7 +10,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import moment from 'moment-jalaali';
+import { formatPersianDate, getPersianDayName } from '../utils/dateUtils';
 
 export const StatsPage: React.FC = () => {
   const { tasks, reflections, focusSessions } = useStore();
@@ -105,8 +105,8 @@ export const StatsPage: React.FC = () => {
 
       days.push({
         date: dateStr,
-        dateLabel: moment(date).format('jMM/jDD'),
-        dayName: moment(date).format('dddd'),
+        dateLabel: formatPersianDate(date, 'short'),
+        dayName: getPersianDayName(date),
         completionRate,
         focusMinutes,
         hasReflection: dayReflections.length > 0,
