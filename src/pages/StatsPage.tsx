@@ -18,11 +18,6 @@ export const StatsPage: React.FC = () => {
   const [todayNote, setTodayNote] = useState('');
   const [todayRating, setTodayRating] = useState(0);
 
-  // Debug logs
-  console.log('StatsPage - tasks:', tasks.length);
-  console.log('StatsPage - reflections:', reflections.length);
-  console.log('StatsPage - focusSessions:', focusSessions.length);
-  console.log('StatsPage - focusSessions data:', focusSessions);
 
   // محاسبه آمار بر اساس بازه زمانی انتخاب شده
   const getDateRange = () => {
@@ -67,7 +62,7 @@ export const StatsPage: React.FC = () => {
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     const totalFocusMinutes = filteredFocusSessions
-      .filter(session => session.type === 'work' && session.completed)
+      .filter(session => session.type === 'work')
       .reduce((total, session) => total + Math.round(session.durationSec / 60), 0);
 
     const reflectionDays = filteredReflections.length;
@@ -106,7 +101,7 @@ export const StatsPage: React.FC = () => {
       const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
       const focusMinutes = dayFocusSessions
-        .filter(session => session.type === 'work' && session.completed)
+        .filter(session => session.type === 'work')
         .reduce((total, session) => total + Math.round(session.durationSec / 60), 0);
 
       days.push({
@@ -136,8 +131,7 @@ export const StatsPage: React.FC = () => {
         return sessionDate >= startDate && 
                sessionDate <= endDate && 
                sessionHour === hour && 
-               session.type === 'work' && 
-               session.completed;
+               session.type === 'work';
       });
       
       const totalMinutes = hourSessions.reduce((total, session) => 
@@ -178,7 +172,7 @@ export const StatsPage: React.FC = () => {
       });
       
       const dayFocusMinutes = dayFocusSessions
-        .filter(session => session.type === 'work' && session.completed)
+        .filter(session => session.type === 'work')
         .reduce((total, session) => total + Math.round(session.durationSec / 60), 0);
       
       if (dayFocusMinutes > 0) {
