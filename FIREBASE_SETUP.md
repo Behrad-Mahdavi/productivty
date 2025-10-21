@@ -33,39 +33,15 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only access their own data
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // User-specific collections
-    match /tasks/{taskId} {
-      allow read, write: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
-    }
-
-    match /courses/{courseId} {
-      allow read, write: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
-    }
-
-    match /reflections/{reflectionId} {
-      allow read, write: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
-    }
-
-    match /focusSessions/{sessionId} {
-      allow read, write: if request.auth != null &&
-        resource.data.userId == request.auth.uid;
-    }
-
-    match /timerState/{userId} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid == userId;
+    // Allow authenticated users to read/write their own data
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
 ```
+
+**نکته مهم:** این rules برای تست است. در production باید rules دقیق‌تری تنظیم کنید.
 
 ### 5. دریافت کانفیگ Firebase
 

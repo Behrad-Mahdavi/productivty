@@ -54,17 +54,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Listen to Firebase Auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      console.log('Auth state changed:', firebaseUser?.uid);
       if (firebaseUser) {
         // Load user data from Firestore
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          console.log('User data loaded:', userData);
           setCurrentUser({
             id: firebaseUser.uid,
             name: userData.name,
             passwordHash: userData.passwordHash,
             createdAt: userData.createdAt
           });
+        } else {
+          console.log('User document not found');
         }
       } else {
         setCurrentUser(null);
@@ -96,10 +100,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    if (currentUser) {
-      loadUsers();
-    }
-  }, [currentUser]);
+    // Load users when component mounts
+    loadUsers();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {

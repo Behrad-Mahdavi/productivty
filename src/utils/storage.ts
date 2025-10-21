@@ -23,6 +23,7 @@ const COLLECTIONS = {
 
 // Load all data for a user from Firestore
 export const loadData = async (userId: string): Promise<AppData> => {
+  console.log('Loading data for user:', userId);
   try {
     const [tasksSnapshot, coursesSnapshot, reflectionsSnapshot, focusSessionsSnapshot, timerStateSnapshot] = await Promise.all([
       getDocs(query(collection(db, COLLECTIONS.TASKS), where('userId', '==', userId))),
@@ -44,6 +45,7 @@ export const loadData = async (userId: string): Promise<AppData> => {
         createdAt: data.createdAt
       });
     });
+    console.log('Loaded tasks:', tasks.length);
 
     const courses: Course[] = [];
     coursesSnapshot.forEach((doc) => {
