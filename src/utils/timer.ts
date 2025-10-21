@@ -11,14 +11,16 @@ export const CYCLES_FOR_LONG_BREAK = 4;
 export const createTimerState = (
   mode: 'work' | 'shortBreak' | 'longBreak',
   taskId?: string,
-  cyclesCompleted = 0
+  cyclesCompleted = 0,
+  durationSec?: number
 ): TimerState => {
   const now = Date.now();
+  const duration = durationSec || TIMER_DURATIONS[mode];
   return {
     mode,
     startTimestamp: now,
-    durationSec: TIMER_DURATIONS[mode],
-    remainingSec: TIMER_DURATIONS[mode],
+    durationSec: duration,
+    remainingSec: duration,
     taskId,
     cyclesCompleted,
     isPaused: false,

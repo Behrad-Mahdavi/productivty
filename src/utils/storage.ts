@@ -12,7 +12,7 @@ import {
   type Unsubscribe
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import type { Task, Course, Reflection, FocusSession, TimerState, AppData } from '../types';
+import type { Task, Course, Reflection, FocusSession, TimerState, AppData, TimerSettings } from '../types';
 
 // Firestore collection names
 const COLLECTIONS = {
@@ -27,12 +27,13 @@ const COLLECTIONS = {
 export const loadData = async (userId: string): Promise<AppData> => {
   console.log('Loading data for user:', userId);
   try {
-    const [tasksSnapshot, coursesSnapshot, reflectionsSnapshot, focusSessionsSnapshot, timerStateSnapshot] = await Promise.all([
+    const [tasksSnapshot, coursesSnapshot, reflectionsSnapshot, focusSessionsSnapshot, timerStateSnapshot, timerSettingsSnapshot] = await Promise.all([
       getDocs(query(collection(db, COLLECTIONS.TASKS), where('userId', '==', userId))),
       getDocs(query(collection(db, COLLECTIONS.COURSES), where('userId', '==', userId))),
       getDocs(query(collection(db, COLLECTIONS.REFLECTIONS), where('userId', '==', userId))),
       getDocs(query(collection(db, COLLECTIONS.FOCUS_SESSIONS), where('userId', '==', userId))),
-      getDoc(doc(db, COLLECTIONS.TIMER_STATE, userId))
+      getDoc(doc(db, COLLECTIONS.TIMER_STATE, userId)),
+      getDoc(doc(db, 'timerSettings', userId))
     ]);
 
     const tasks: Task[] = [];
@@ -97,6 +98,18 @@ export const loadData = async (userId: string): Promise<AppData> => {
       isPaused: timerStateSnapshot.data().isPaused
     } : null;
 
+    const timerSettings: TimerSettings = timerSettingsSnapshot.exists() ? {
+      workDuration: timerSettingsSnapshot.data().workDuration || 25,
+      shortBreakDuration: timerSettingsSnapshot.data().shortBreakDuration || 5,
+      longBreakDuration: timerSettingsSnapshot.data().longBreakDuration || 15,
+      cyclesBeforeLongBreak: timerSettingsSnapshot.data().cyclesBeforeLongBreak || 4
+    } : {
+      workDuration: 25,
+      shortBreakDuration: 5,
+      longBreakDuration: 15,
+      cyclesBeforeLongBreak: 4
+    };
+
     return {
       tasks,
       courses,
@@ -109,7 +122,8 @@ export const loadData = async (userId: string): Promise<AppData> => {
         remainingSec: 25 * 60,
         cyclesCompleted: 0,
         isPaused: false
-      }
+      },
+      timerSettings
     };
   } catch (error) {
     console.error('Error loading data from Firestore:', error);
@@ -125,6 +139,12 @@ export const loadData = async (userId: string): Promise<AppData> => {
         remainingSec: 25 * 60,
         cyclesCompleted: 0,
         isPaused: false
+      },
+      timerSettings: {
+        workDuration: 25,
+        shortBreakDuration: 5,
+        longBreakDuration: 15,
+        cyclesBeforeLongBreak: 4
       }
     };
   }

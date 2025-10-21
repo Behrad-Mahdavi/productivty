@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square, SkipForward } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { formatTime, getRemainingTime, getTimerProgress, isTimerComplete } from '../utils/timer';
+import { TimerSettings } from './TimerSettings';
 
 export const FocusTimer: React.FC = () => {
   const { timerState, startTimer, pauseTimer, resumeTimer, stopTimer, skipTimer } = useStore();
@@ -76,7 +77,10 @@ export const FocusTimer: React.FC = () => {
   return (
     <div className="card">
       <div className="card-body text-center">
-        <h5 className="card-title mb-4">تایمر تمرکز</h5>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h5 className="card-title mb-0">تایمر تمرکز</h5>
+          <TimerSettings />
+        </div>
         
         {/* Timer Circle */}
         <div className={`timer-circle ${getModeClass()}`} style={{ '--progress': `${progress * 3.6}deg` } as any}>

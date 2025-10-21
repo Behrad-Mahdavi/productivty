@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, Course, Reflection, FocusSession, TimerState, Assignment } from '../types';
+import type { Task, Course, Reflection, FocusSession, TimerState, Assignment, TimerSettings } from '../types';
 import { 
   loadData, 
   saveTasks, 
@@ -13,6 +13,8 @@ import {
   subscribeToReflections,
   subscribeToFocusSessions
 } from '../utils/storage';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { 
   createTimerState, 
   pauseTimer, 
@@ -29,6 +31,7 @@ interface AppStore {
   reflections: Reflection[];
   focusSessions: FocusSession[];
   timerState: TimerState | null;
+  timerSettings: TimerSettings;
   currentUserId: string | null;
   
   // Actions
@@ -65,6 +68,9 @@ interface AppStore {
   getTodayProgress: () => number;
   getFocusMinutesToday: () => number;
   getOverdueAssignments: () => Assignment[];
+  
+  // Timer settings actions
+  updateTimerSettings: (settings: Partial<TimerSettings>) => Promise<void>;
 }
 
 export const useStore = create<AppStore>((set, get) => {
@@ -77,6 +83,12 @@ export const useStore = create<AppStore>((set, get) => {
     reflections: [],
     focusSessions: [],
     timerState: null,
+    timerSettings: {
+      workDuration: 25,
+      shortBreakDuration: 5,
+      longBreakDuration: 15,
+      cyclesBeforeLongBreak: 4
+    },
     currentUserId: null,
   
   setCurrentUserId: (userId: string | null) => {
@@ -139,34 +151,13 @@ export const useStore = create<AppStore>((set, get) => {
       if (timerState && !timerState.isPaused) {
         const elapsed = calculateElapsedTime(timerState);
         if (elapsed >= timerState.durationSec) {
-          // Timer completed while away
+          // Timer completed while away - just complete the session and stop
           const session = completeSession(timerState);
-          const nextMode = getNextMode(timerState.mode as 'work' | 'shortBreak' | 'longBreak', timerState.cyclesCompleted);
-          const newCycles = timerState.mode === 'work' ? timerState.cyclesCompleted + 1 : timerState.cyclesCompleted;
-          
-          if (nextMode === 'work') {
-            // Start new work session
-            const newTimerState = createTimerState('work', undefined, newCycles);
-            // Remove undefined taskId before saving
-            const timerStateToSave = { ...newTimerState };
-            if (!timerStateToSave.taskId) {
-              delete timerStateToSave.taskId;
-            }
-            set({ timerState: newTimerState });
-            await saveTimerState(userId, timerStateToSave);
-          } else {
-            // Start break
-            const newTimerState = createTimerState(nextMode, undefined, newCycles);
-            // Remove undefined taskId before saving
-            const timerStateToSave = { ...newTimerState };
-            if (!timerStateToSave.taskId) {
-              delete timerStateToSave.taskId;
-            }
-            set({ timerState: newTimerState });
-            await saveTimerState(userId, timerStateToSave);
-          }
-          
           set({ focusSessions: [...data.focusSessions, session] });
+          
+          // Clear timer state instead of starting new one
+          set({ timerState: null });
+          await saveTimerState(userId, null);
           return;
         }
       }
@@ -178,6 +169,12 @@ export const useStore = create<AppStore>((set, get) => {
         reflections: data.reflections,
         focusSessions: data.focusSessions,
         timerState,
+        timerSettings: data.timerSettings || {
+          workDuration: 25,
+          shortBreakDuration: 5,
+          longBreakDuration: 15,
+          cyclesBeforeLongBreak: 4
+        },
         currentUserId: userId
       });
     } catch (error) {
@@ -364,14 +361,31 @@ export const useStore = create<AppStore>((set, get) => {
   
   // Timer actions
   startTimer: async (mode: 'work' | 'shortBreak' | 'longBreak', taskId?: string) => {
-    const { currentUserId } = get();
+    const { currentUserId, timerSettings } = get();
     if (!currentUserId) return;
-    
+
     const currentTimer = get().timerState;
     const cyclesCompleted = currentTimer?.mode === 'work' ? currentTimer.cyclesCompleted + 1 : 0;
-    const newTimerState = createTimerState(mode as 'work' | 'shortBreak' | 'longBreak', taskId, cyclesCompleted);
-    set({ timerState: newTimerState });
     
+    // Get duration from settings
+    let durationMinutes: number;
+    switch (mode) {
+      case 'work':
+        durationMinutes = timerSettings.workDuration;
+        break;
+      case 'shortBreak':
+        durationMinutes = timerSettings.shortBreakDuration;
+        break;
+      case 'longBreak':
+        durationMinutes = timerSettings.longBreakDuration;
+        break;
+      default:
+        durationMinutes = 25;
+    }
+    
+    const newTimerState = createTimerState(mode as 'work' | 'shortBreak' | 'longBreak', taskId, cyclesCompleted, durationMinutes * 60);
+    set({ timerState: newTimerState });
+
     // Clean timer state before saving
     const timerStateToSave = { ...newTimerState };
     if (!timerStateToSave.taskId) {
@@ -564,6 +578,24 @@ export const useStore = create<AppStore>((set, get) => {
     
     return overdue;
   },
+
+  // Timer settings actions
+  updateTimerSettings: async (settings: Partial<TimerSettings>) => {
+    const { currentUserId } = get();
+    if (!currentUserId) return;
+    
+    const currentSettings = get().timerSettings;
+    const newSettings = { ...currentSettings, ...settings };
+    
+    set({ timerSettings: newSettings });
+    
+    // Save to Firestore
+    try {
+      await setDoc(doc(db, 'timerSettings', currentUserId), newSettings);
+    } catch (error) {
+      console.error('Error saving timer settings:', error);
+    }
+  }
 
   };
 });

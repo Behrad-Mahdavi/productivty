@@ -59,10 +59,18 @@ export interface User {
   createdAt: string;
 }
 
+export interface TimerSettings {
+  workDuration: number; // in minutes
+  shortBreakDuration: number; // in minutes
+  longBreakDuration: number; // in minutes
+  cyclesBeforeLongBreak: number;
+}
+
 export interface AppData {
   tasks: Task[];
   courses: Course[];
   reflections: Reflection[];
   focusSessions: FocusSession[];
   timerState?: TimerState;
+  timerSettings?: TimerSettings;
 }
