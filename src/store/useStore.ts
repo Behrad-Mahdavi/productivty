@@ -173,7 +173,10 @@ export const useStore = create<AppStore>((set, get) => {
       
       console.log('Setting app data:', data);
       set({ 
-        ...data, 
+        tasks: data.tasks,
+        courses: data.courses,
+        reflections: data.reflections,
+        focusSessions: data.focusSessions,
         timerState,
         currentUserId: userId
       });
