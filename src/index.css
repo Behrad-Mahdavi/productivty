@@ -11,21 +11,21 @@
 
 /* Custom styles */
 body {
-  font-family: 'IRANSansXVF', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: 'IRANSansXVF';
   background-color: #f8f9fa;
   color: #b0b0b0;
 }
 
 /* Apply IRANSansXVF font to all elements */
 * {
-  font-family: 'IRANSansXVF', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  font-family: 'IRANSansXVF' !important;
 }
 
 /* Improve contrast for titles and headings */
 h1, h2, h3, h4, h5, h6 {
   color: #a7a7a7 !important;
   font-weight: 600;
-  font-family: 'IRANSansXVF', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+  font-family: 'IRANSansXVF' !important;
 }
 
 .h1, .h2, .h3, .h4, .h5, .h6 {
@@ -64,15 +64,72 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-outline-secondary {
-  color: #6c757d;
-  border-color: #6c757d;
-  background-color: transparent;
+  color: #495057 !important;
+  border-color: #6c757d !important;
+  background-color: #f8f9fa !important;
+  border-width: 2px !important;
 }
 
 .btn-outline-secondary:hover {
-  color: #fff;
-  background-color: #6c757d;
-  border-color: #6c757d;
+  color: #fff !important;
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-outline-secondary:focus {
+  color: #fff !important;
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.btn-outline-secondary:active {
+  color: #fff !important;
+  background-color: #5a6268 !important;
+  border-color: #5a6268 !important;
+  transform: translateY(0);
+}
+
+/* Outline button variants for better contrast */
+.btn-outline-primary {
+  color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-color: #f8f9fa !important;
+  border-width: 2px !important;
+}
+
+.btn-outline-primary:hover {
+  color: #fff !important;
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+.btn-outline-success {
+  color: #198754 !important;
+  border-color: #198754 !important;
+  background-color: #f8f9fa !important;
+  border-width: 2px !important;
+}
+
+.btn-outline-success:hover {
+  color: #fff !important;
+  background-color: #198754 !important;
+  border-color: #198754 !important;
+}
+
+.btn-outline-danger {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  background-color: #f8f9fa !important;
+  border-width: 2px !important;
+}
+
+.btn-outline-danger:hover {
+  color: #fff !important;
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
 }
 
 /* Improve form control contrast */
@@ -272,14 +329,39 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   font-weight: 500;
   border: none;
+  transition: all 0.2s ease;
 }
 
 .btn:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
 }
 
 .btn:active {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transform: translateY(0);
+}
+
+/* Small button improvements */
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon buttons */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
 }
 
 /* Animation classes removed */
