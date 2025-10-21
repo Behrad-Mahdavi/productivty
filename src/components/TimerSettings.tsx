@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Settings, Save, RotateCcw } from 'lucide-react';
+import { Settings, Save, RotateCcw, Plus } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 export const TimerSettings: React.FC = () => {
-  const { timerSettings, updateTimerSettings } = useStore();
+  const { timerSettings, updateTimerSettings, addFocusSession } = useStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [manualMinutes, setManualMinutes] = useState(0);
   
   console.log('TimerSettings component rendered');
   const [settings, setSettings] = useState({
@@ -26,6 +27,13 @@ export const TimerSettings: React.FC = () => {
       longBreakDuration: 15,
       cyclesBeforeLongBreak: 4
     });
+  };
+
+  const handleManualEntry = async () => {
+    if (manualMinutes > 0) {
+      await addFocusSession(manualMinutes);
+      setManualMinutes(0);
+    }
   };
 
   return (
@@ -51,6 +59,44 @@ export const TimerSettings: React.FC = () => {
                 ></button>
               </div>
               <div className="modal-body">
+                {/* Manual Entry Section */}
+                <div className="card mb-4">
+                  <div className="card-header">
+                    <h6 className="mb-0">ثبت دستی تمرین</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      <div className="col-md-8">
+                        <label className="form-label">دقیقه تمرکز</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          min="1"
+                          max="480"
+                          value={manualMinutes}
+                          onChange={(e) => setManualMinutes(parseInt(e.target.value) || 0)}
+                          placeholder="مثال: 30"
+                        />
+                      </div>
+                      <div className="col-md-4 d-flex align-items-end">
+                        <button
+                          type="button"
+                          className="btn btn-success w-100"
+                          onClick={handleManualEntry}
+                          disabled={manualMinutes <= 0}
+                        >
+                          <Plus size={16} className="me-1" />
+                          اضافه کن
+                        </button>
+                      </div>
+                    </div>
+                    <small className="text-muted">
+                      برای زمانی که تایمر رو فراموش کردید و می‌خواید دستی تمرین رو ثبت کنید
+                    </small>
+                  </div>
+                </div>
+
+                {/* Timer Settings Section */}
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label">مدت تمرکز (دقیقه)</label>

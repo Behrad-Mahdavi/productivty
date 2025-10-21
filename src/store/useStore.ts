@@ -71,6 +71,7 @@ interface AppStore {
   
   // Timer settings actions
   updateTimerSettings: (settings: Partial<TimerSettings>) => Promise<void>;
+  addFocusSession: (minutes: number) => Promise<void>;
 }
 
 export const useStore = create<AppStore>((set, get) => {
@@ -594,6 +595,32 @@ export const useStore = create<AppStore>((set, get) => {
       await setDoc(doc(db, 'timerSettings', currentUserId), newSettings);
     } catch (error) {
       console.error('Error saving timer settings:', error);
+    }
+  },
+
+  addFocusSession: async (minutes: number) => {
+    const { currentUserId } = get();
+    if (!currentUserId || minutes <= 0) return;
+    
+    const now = new Date();
+    const session = {
+      id: `manual_session_${Date.now()}`,
+      taskId: undefined,
+      startTime: new Date(now.getTime() - minutes * 60 * 1000).toISOString(),
+      endTime: now.toISOString(),
+      durationSec: minutes * 60,
+      completed: true,
+      type: 'work' as const
+    };
+    
+    const updatedSessions = [...get().focusSessions, session];
+    set({ focusSessions: updatedSessions });
+    
+    // Save to Firestore
+    try {
+      await saveFocusSessions(currentUserId, updatedSessions);
+    } catch (error) {
+      console.error('Error saving manual focus session:', error);
     }
   }
 
