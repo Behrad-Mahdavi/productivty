@@ -11,7 +11,7 @@ import {
 import { useStore } from '../store/useStore';
 import { useUser } from '../contexts/UserContext';
 import type { LeaderboardEntry, UserStats } from '../types';
-import { saveUserStats, getAllUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard } from '../utils/gamificationStorage';
+import { saveUserStats, getAllUserStats, calculateLeaderboard, subscribeToLeaderboard, updateLeaderboard, createSampleUsers } from '../utils/gamificationStorage';
 
 export const GamificationDashboard: React.FC = () => {
   const { currentUser } = useUser();
@@ -133,8 +133,17 @@ export const GamificationDashboard: React.FC = () => {
         // دریافت آمار همه کاربران
         const allUserStats = await getAllUserStats();
         
+        // اگر هیچ کاربری وجود نداره، کاربران نمونه ایجاد کن
         if (allUserStats.length === 0) {
-          setLeaderboard([]);
+          console.log('No user stats found, creating sample users...');
+          await createSampleUsers();
+          // دوباره تلاش کن
+          const newUserStats = await getAllUserStats();
+          if (newUserStats.length > 0) {
+            const leaderboard = calculateLeaderboard(newUserStats);
+            setLeaderboard(leaderboard);
+            await updateLeaderboard();
+          }
           return;
         }
 
@@ -191,6 +200,25 @@ export const GamificationDashboard: React.FC = () => {
           <div className="text-center mb-4">
             <h1 className="h2 mb-2 fw-bold text-dark">🏆 رقابت دوستان</h1>
             <p className="text-muted mb-4">ببینید چه کسی بیشتر کار می‌کند!</p>
+            
+            {/* دکمه ایجاد کاربران نمونه */}
+            <button
+              className="btn btn-outline-primary btn-sm mb-3"
+              onClick={async () => {
+                try {
+                  await createSampleUsers();
+                  // Reload leaderboard
+                  const allUserStats = await getAllUserStats();
+                  const leaderboard = calculateLeaderboard(allUserStats);
+                  setLeaderboard(leaderboard);
+                  await updateLeaderboard();
+                } catch (error) {
+                  console.error('Error creating sample users:', error);
+                }
+              }}
+            >
+              ایجاد کاربران نمونه برای تست
+            </button>
             
             <div className="btn-group" role="group">
               <button

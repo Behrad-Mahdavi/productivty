@@ -36,9 +36,9 @@ function AppContent() {
       <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">در حال بارگذاری...</span>
+            <span className="visually-hidden">...در حال بارگذاری</span>
           </div>
-          <p className="mt-3 text-muted">در حال بارگذاری...</p>
+          <p className="mt-3 text-muted">...در حال بارگذاری</p>
         </div>
       </div>
     );

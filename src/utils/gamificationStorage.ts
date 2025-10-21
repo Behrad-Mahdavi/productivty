@@ -139,3 +139,47 @@ export const updateLeaderboard = async (): Promise<void> => {
     console.error('Error updating leaderboard:', error);
   }
 };
+
+// ایجاد کاربران نمونه برای تست
+export const createSampleUsers = async (): Promise<void> => {
+  try {
+    const sampleUsers: UserStats[] = [
+      {
+        userId: 'sample_user_1',
+        userName: 'بهراد',
+        streak: 12,
+        totalHours: 45.5,
+        totalFocusMinutes: 2730,
+        lastUpdate: new Date().toISOString(),
+        dailyStats: []
+      },
+      {
+        userId: 'sample_user_2',
+        userName: 'رادمان',
+        streak: 8,
+        totalHours: 38.2,
+        totalFocusMinutes: 2292,
+        lastUpdate: new Date().toISOString(),
+        dailyStats: []
+      },
+      {
+        userId: 'sample_user_3',
+        userName: 'مهدیسا',
+        streak: 15,
+        totalHours: 32.1,
+        totalFocusMinutes: 1926,
+        lastUpdate: new Date().toISOString(),
+        dailyStats: []
+      }
+    ];
+
+    // ذخیره کاربران نمونه
+    for (const user of sampleUsers) {
+      await saveUserStats(user.userId, user);
+    }
+
+    console.log('Sample users created successfully');
+  } catch (error) {
+    console.error('Error creating sample users:', error);
+  }
+};
