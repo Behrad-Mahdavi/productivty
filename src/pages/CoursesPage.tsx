@@ -3,7 +3,7 @@ import { Plus, BookOpen, Calendar, CheckCircle, AlertTriangle } from 'lucide-rea
 import { useStore } from '../store/useStore';
 import { DateDisplay } from '../components/DateDisplay';
 import { PersianDatePicker } from '../components/PersianDatePicker';
-import moment from 'moment-jalaali';
+import { formatPersianDate } from '../utils/dateUtils';
 
 export const CoursesPage: React.FC = () => {
   const { courses, addCourse, deleteCourse, addAssignment, updateAssignment } = useStore();
@@ -192,7 +192,7 @@ export const CoursesPage: React.FC = () => {
                       <p className="card-text small text-muted mb-2">{assignment.courseName} ({assignment.courseCode})</p>
                       <div className="d-flex align-items-center text-muted small">
                         <Calendar size={14} className="me-1" />
-                        <span>{moment(assignment.dueDate).format('jYYYY/jMM/jDD')}</span>
+                        <span>{formatPersianDate(assignment.dueDate, 'compact')}</span>
                       </div>
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export const CoursesPage: React.FC = () => {
                                 </span>
                               </div>
                               <small className={`text-muted ${isOverdue(assignment.dueDate) && !assignment.done ? 'text-danger' : ''}`}>
-                                {moment(assignment.dueDate).format('jMM/jDD')}
+                                {formatPersianDate(assignment.dueDate, 'short')}
                               </small>
                             </div>
                           ))}

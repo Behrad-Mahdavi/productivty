@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Calendar, Clock } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { formatPersianDate } from '../utils/dateUtils';
 
 interface ReflectionFormProps {
   onClose: () => void;
@@ -45,7 +46,7 @@ export const ReflectionForm: React.FC<ReflectionFormProps> = ({ onClose, date })
             <div className="d-flex align-items-center">
               <Calendar className="text-success me-2" size={20} />
               <h5 className="modal-title mb-0">
-                بازتاب روزانه - {new Date(reflectionDate).toLocaleDateString('fa-IR')}
+                بازتاب روزانه - {formatPersianDate(reflectionDate, 'full')}
               </h5>
             </div>
             <button

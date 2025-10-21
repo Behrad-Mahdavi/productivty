@@ -2,7 +2,7 @@ import React from 'react';
 import { Check, Clock, Play, Trash2 } from 'lucide-react';
 import type { Task } from '../types';
 import { useStore } from '../store/useStore';
-import moment from 'moment-jalaali';
+import { formatPersianDate } from '../utils/dateUtils';
 
 interface TaskCardProps {
   task: Task;
@@ -54,7 +54,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStartTimer }) => {
               </span>
               <small className="text-muted d-flex align-items-center">
                 <Clock size={12} className="me-1" />
-                {moment(task.date).format('jYYYY/jMM/jDD')}
+                {formatPersianDate(task.date, 'compact')}
               </small>
             </div>
           </div>

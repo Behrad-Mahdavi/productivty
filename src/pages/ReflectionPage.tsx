@@ -3,7 +3,7 @@ import { Calendar, Clock, Heart, AlertTriangle, Target, Plus, Edit, Trash2 } fro
 import { useStore } from '../store/useStore';
 import { DateDisplay } from '../components/DateDisplay';
 import { PersianDatePicker } from '../components/PersianDatePicker';
-import moment from 'moment-jalaali';
+import { formatPersianDate } from '../utils/dateUtils';
 
 export const ReflectionPage: React.FC = () => {
   const { reflections, addReflection, deleteReflection, getFocusMinutesToday } = useStore();
@@ -119,7 +119,7 @@ export const ReflectionPage: React.FC = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="d-flex align-items-center">
                     <Calendar className="text-primary me-2" size={20} />
-                    <h6 className="mb-0">بازتاب {moment(selectedDate).format('jYYYY/jMM/jDD')}</h6>
+                    <h6 className="mb-0">بازتاب {formatPersianDate(selectedDate, 'compact')}</h6>
                   </div>
                   <div className="d-flex gap-2">
                     <button
@@ -215,7 +215,7 @@ export const ReflectionPage: React.FC = () => {
                         <div className="flex-grow-1">
                           <div className="d-flex align-items-center mb-2">
                             <Calendar className="text-primary me-2" size={16} />
-                            <h6 className="mb-0">{moment(reflection.date).format('dddd، jD jMMMM jYYYY')}</h6>
+                            <h6 className="mb-0">{formatPersianDate(reflection.date, 'full')}</h6>
                             {reflection.focusMinutes && reflection.focusMinutes > 0 && (
                               <span className="badge bg-success ms-2">
                                 <Clock size={12} className="me-1" />
@@ -274,7 +274,7 @@ export const ReflectionPage: React.FC = () => {
                 <div className="d-flex align-items-center">
                   <Calendar className="text-success me-2" size={20} />
                   <h5 className="modal-title mb-0">
-                    {editingReflection === selectedDate ? 'ویرایش بازتاب' : 'بازتاب جدید'} - {moment(selectedDate).format('jYYYY/jMM/jDD')}
+                    {editingReflection === selectedDate ? 'ویرایش بازتاب' : 'بازتاب جدید'} - {formatPersianDate(selectedDate, 'compact')}
                   </h5>
                 </div>
                 <button

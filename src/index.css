@@ -35,6 +35,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Improve button contrast */
 .btn {
+  z-index: 1000;
   font-weight: 500;
   border-width: 1px;
 }
