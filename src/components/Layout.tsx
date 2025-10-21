@@ -8,7 +8,8 @@ import {
   Menu, 
   X,
   Clock,
-  Trophy
+  Trophy,
+  Users
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -25,6 +26,7 @@ const navigation = [
   { id: 'reflection', label: 'بازتاب', icon: Brain },
   { id: 'stats', label: 'آمار', icon: BarChart3 },
   { id: 'gamification', label: 'رقابت', icon: Trophy },
+  { id: 'users', label: 'کاربران', icon: Users },
 ];
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange, userSelector }) => {

@@ -11,6 +11,7 @@ import { CoursesPage } from './pages/CoursesPage';
 import { ReflectionPage } from './pages/ReflectionPage';
 import { StatsPage } from './pages/StatsPage';
 import { GamificationPage } from './pages/GamificationPage';
+import { UsersPage } from './pages/UsersPage';
 
 function AppContent() {
   const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync } = useStore();
@@ -61,6 +62,8 @@ function AppContent() {
         return <StatsPage />;
       case 'gamification':
         return <GamificationPage />;
+      case 'users':
+        return <UsersPage />;
       default:
         return <Dashboard />;
     }

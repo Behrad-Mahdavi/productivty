@@ -75,6 +75,7 @@ export interface DailyStat {
 
 export interface UserStats {
   userId: string;
+  userName: string;
   streak: number; // تعداد روزهای متوالی فعالیت
   totalHours: number;
   totalFocusMinutes: number;

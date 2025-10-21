@@ -11,6 +11,7 @@ import {
 import { useStore } from '../store/useStore';
 import { useUser } from '../contexts/UserContext';
 import type { LeaderboardEntry, UserStats } from '../types';
+import { saveUserStats, getAllUserStats, calculateLeaderboard } from '../utils/gamificationStorage';
 
 export const GamificationDashboard: React.FC = () => {
   const { currentUser } = useUser();
@@ -103,42 +104,41 @@ export const GamificationDashboard: React.FC = () => {
         });
       }
 
-      return {
+      const userStats: UserStats = {
         userId: currentUser.id,
+        userName: currentUser.name,
         streak,
         totalHours,
         totalFocusMinutes: totalMinutes,
         lastUpdate: now.toISOString(),
         dailyStats
       };
+
+      // ذخیره آمار کاربر
+      saveUserStats(currentUser.id, userStats);
+      
+      return userStats;
     };
 
     const stats = calculateUserStats();
     setUserStats(stats);
   }, [currentUser, focusSessions, tasks, timeRange]);
 
-  // محاسبه leaderboard بر اساس داده‌های واقعی
+  // محاسبه leaderboard بر اساس داده‌های همه کاربران
   useEffect(() => {
-    if (!currentUser || !userStats) return;
+    if (!currentUser) return;
 
-    // فقط کاربر فعلی رو نمایش می‌دیم تا زمانی که multi-user support اضافه بشه
-    const realLeaderboard: LeaderboardEntry[] = [
-      {
-        userId: currentUser.id,
-        userName: currentUser.name,
-        totalHours: userStats.totalHours,
-        streak: userStats.streak,
-        rank: 1
-      }
-    ];
+    // دریافت آمار همه کاربران
+    const allUserStats = getAllUserStats();
+    
+    if (allUserStats.length === 0) {
+      setLeaderboard([]);
+      return;
+    }
 
-    // مرتب‌سازی بر اساس totalHours
-    realLeaderboard.sort((a, b) => b.totalHours - a.totalHours);
-    realLeaderboard.forEach((entry, index) => {
-      entry.rank = index + 1;
-    });
-
-    setLeaderboard(realLeaderboard);
+    // محاسبه leaderboard
+    const leaderboard = calculateLeaderboard(allUserStats);
+    setLeaderboard(leaderboard);
   }, [currentUser, userStats]);
 
   const formatTime = (hours: number) => {

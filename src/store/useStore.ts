@@ -755,6 +755,7 @@ export const useStore = create<AppStore>((set, get) => {
 
     return {
       userId,
+      userName: 'کاربر', // این باید از context بیاد
       streak,
       totalHours,
       totalFocusMinutes: totalMinutes,
