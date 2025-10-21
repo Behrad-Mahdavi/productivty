@@ -152,6 +152,14 @@ export const calculateAllUsersStats = async (): Promise<UserStats[]> => {
     const tasksSnapshot = await getDocs(collection(db, 'tasks'));
     const allTasks = tasksSnapshot.docs.map(doc => doc.data());
     
+    // دریافت اطلاعات کاربران از users collection
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    const usersMap = new Map<string, any>();
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      usersMap.set(doc.id, userData);
+    });
+    
     // گروه‌بندی sessions بر اساس userId
     const userSessionsMap = new Map<string, any[]>();
     const userTasksMap = new Map<string, any[]>();
@@ -179,6 +187,7 @@ export const calculateAllUsersStats = async (): Promise<UserStats[]> => {
     
     for (const [userId, sessions] of userSessionsMap) {
       const userTasks = userTasksMap.get(userId) || [];
+      const userInfo = usersMap.get(userId);
       
       // محاسبه مجموع ساعت‌ها
       const totalMinutes = sessions
@@ -247,7 +256,7 @@ export const calculateAllUsersStats = async (): Promise<UserStats[]> => {
       
       allUserStats.push({
         userId,
-        userName: `کاربر ${userId.slice(-4)}`, // نام موقت
+        userName: userInfo?.name || `کاربر ${userId.slice(-4)}`, // نام واقعی از دیتابیس
         streak,
         totalHours,
         totalFocusMinutes: totalMinutes,
