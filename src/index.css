@@ -42,6 +42,31 @@ body {
   .d-flex.gap-2 {
     gap: 0.5rem !important;
   }
+  
+  /* Heatmap responsive */
+  .heatmap-grid {
+    overflow-x: auto;
+    padding: 0.5rem 0;
+  }
+  
+  .heatmap-row {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+    min-width: 600px; /* Ensure minimum width for scroll */
+  }
+  
+  .heatmap-cell {
+    min-width: 8px !important;
+    min-height: 12px !important;
+    flex: 1;
+  }
+  
+  /* Heatmap container */
+  .heatmap-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Apply IRANSansXVF font to all elements */
@@ -542,6 +567,23 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
   min-width: 12px;
   min-height: 20px;
+}
+
+/* Heatmap responsive improvements */
+.heatmap-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heatmap-row {
+  display: flex;
+  gap: 2px;
 }
 
 .heatmap-cell:hover {

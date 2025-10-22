@@ -320,7 +320,8 @@ export const StatsPage: React.FC = () => {
                 <div className="card-body">
                   <div className="row">
                     <div className="col-md-8">
-                      <div className="heatmap-grid">
+                      <div className="heatmap-container">
+                        <div className="heatmap-grid">
                         {Array.from({ length: 7 }, (_, dayIndex) => (
                           <div key={dayIndex} className="heatmap-row">
                             {Array.from({ length: 24 }, (_, hourIndex) => {
@@ -345,6 +346,7 @@ export const StatsPage: React.FC = () => {
                             })}
                           </div>
                         ))}
+                        </div>
                       </div>
                     </div>
                     <div className="col-md-4">
