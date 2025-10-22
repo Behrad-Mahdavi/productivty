@@ -161,9 +161,44 @@ export const useStore = create<AppStore>((set, get) => {
       if (timerState && !timerState.isPaused) {
         const elapsed = calculateElapsedTime(timerState);
         if (elapsed >= timerState.durationSec) {
-          // Timer completed while away - just complete the session and stop
+          // Timer completed while away - complete the session and add focus minutes
           const session = completeSession(timerState);
-          set({ focusSessions: [...data.focusSessions, session] });
+          const updatedFocusSessions = [...data.focusSessions, session];
+          set({ focusSessions: updatedFocusSessions });
+          await saveFocusSessions(userId, updatedFocusSessions);
+          
+          // Add focus minutes to today's reflection if it's a work session
+          if (timerState.mode === 'work' && session.durationSec > 0) {
+            const focusMinutes = Math.round(session.durationSec / 60);
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Get or create today's reflection
+            const todayReflection = data.reflections.find(r => r.date === today);
+            if (todayReflection) {
+              // Update existing reflection
+              const updatedReflection = {
+                ...todayReflection,
+                focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+              };
+              const updatedReflections = data.reflections.map(r => 
+                r.date === today ? updatedReflection : r
+              );
+              set({ reflections: updatedReflections });
+              await saveReflections(userId, updatedReflections);
+            } else {
+              // Create new reflection with focus minutes
+              const newReflection = {
+                date: today,
+                good: '',
+                distraction: '',
+                improve: '',
+                focusMinutes: focusMinutes
+              };
+              const updatedReflections = [...data.reflections, newReflection];
+              set({ reflections: updatedReflections });
+              await saveReflections(userId, updatedReflections);
+            }
+          }
           
           // Clear timer state instead of starting new one
           set({ timerState: null });
@@ -446,44 +481,46 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // Complete the session and save focus minutes
-      const session = completeSession(currentTimer);
-      
-      // Add session to focusSessions
-      const updatedFocusSessions = [...get().focusSessions, session];
-      set({ focusSessions: updatedFocusSessions });
-      await saveFocusSessions(currentUserId, updatedFocusSessions);
-      
-      // Add focus minutes to today's reflection if it's a work session
-      if (currentTimer.mode === 'work' && session.durationSec > 0) {
-        const focusMinutes = Math.round(session.durationSec / 60);
-        const today = new Date().toISOString().split('T')[0];
+      // Only complete session if timer was actually running and has meaningful duration
+      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec) {
+        const session = completeSession(currentTimer);
         
-        // Get or create today's reflection
-        const todayReflection = get().reflections.find(r => r.date === today);
-        if (todayReflection) {
-          // Update existing reflection
-          const updatedReflection = {
-            ...todayReflection,
-            focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-          };
-          const updatedReflections = get().reflections.map(r => 
-            r.date === today ? updatedReflection : r
-          );
-          set({ reflections: updatedReflections });
-          await saveReflections(currentUserId, updatedReflections);
-        } else {
-          // Create new reflection with focus minutes
-          const newReflection = {
-            date: today,
-            good: '',
-            distraction: '',
-            improve: '',
-            focusMinutes: focusMinutes
-          };
-          const updatedReflections = [...get().reflections, newReflection];
-          set({ reflections: updatedReflections });
-          await saveReflections(currentUserId, updatedReflections);
+        // Add session to focusSessions
+        const updatedFocusSessions = [...get().focusSessions, session];
+        set({ focusSessions: updatedFocusSessions });
+        await saveFocusSessions(currentUserId, updatedFocusSessions);
+        
+        // Add focus minutes to today's reflection if it's a work session
+        if (currentTimer.mode === 'work' && session.durationSec > 0) {
+          const focusMinutes = Math.round(session.durationSec / 60);
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Get or create today's reflection
+          const todayReflection = get().reflections.find(r => r.date === today);
+          if (todayReflection) {
+            // Update existing reflection
+            const updatedReflection = {
+              ...todayReflection,
+              focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+            };
+            const updatedReflections = get().reflections.map(r => 
+              r.date === today ? updatedReflection : r
+            );
+            set({ reflections: updatedReflections });
+            await saveReflections(currentUserId, updatedReflections);
+          } else {
+            // Create new reflection with focus minutes
+            const newReflection = {
+              date: today,
+              good: '',
+              distraction: '',
+              improve: '',
+              focusMinutes: focusMinutes
+            };
+            const updatedReflections = [...get().reflections, newReflection];
+            set({ reflections: updatedReflections });
+            await saveReflections(currentUserId, updatedReflections);
+          }
         }
       }
       
@@ -498,44 +535,46 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // Complete the session and save focus minutes
-      const session = completeSession(currentTimer);
-      
-      // Add session to focusSessions
-      const updatedFocusSessions = [...get().focusSessions, session];
-      set({ focusSessions: updatedFocusSessions });
-      await saveFocusSessions(currentUserId, updatedFocusSessions);
-      
-      // Add focus minutes to today's reflection if it's a work session
-      if (currentTimer.mode === 'work' && session.durationSec > 0) {
-        const focusMinutes = Math.round(session.durationSec / 60);
-        const today = new Date().toISOString().split('T')[0];
+      // Only complete session if timer was actually running and has meaningful duration
+      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec) {
+        const session = completeSession(currentTimer);
         
-        // Get or create today's reflection
-        const todayReflection = get().reflections.find(r => r.date === today);
-        if (todayReflection) {
-          // Update existing reflection
-          const updatedReflection = {
-            ...todayReflection,
-            focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-          };
-          const updatedReflections = get().reflections.map(r => 
-            r.date === today ? updatedReflection : r
-          );
-          set({ reflections: updatedReflections });
-          await saveReflections(currentUserId, updatedReflections);
-        } else {
-          // Create new reflection with focus minutes
-          const newReflection = {
-            date: today,
-            good: '',
-            distraction: '',
-            improve: '',
-            focusMinutes: focusMinutes
-          };
-          const updatedReflections = [...get().reflections, newReflection];
-          set({ reflections: updatedReflections });
-          await saveReflections(currentUserId, updatedReflections);
+        // Add session to focusSessions
+        const updatedFocusSessions = [...get().focusSessions, session];
+        set({ focusSessions: updatedFocusSessions });
+        await saveFocusSessions(currentUserId, updatedFocusSessions);
+        
+        // Add focus minutes to today's reflection if it's a work session
+        if (currentTimer.mode === 'work' && session.durationSec > 0) {
+          const focusMinutes = Math.round(session.durationSec / 60);
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Get or create today's reflection
+          const todayReflection = get().reflections.find(r => r.date === today);
+          if (todayReflection) {
+            // Update existing reflection
+            const updatedReflection = {
+              ...todayReflection,
+              focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+            };
+            const updatedReflections = get().reflections.map(r => 
+              r.date === today ? updatedReflection : r
+            );
+            set({ reflections: updatedReflections });
+            await saveReflections(currentUserId, updatedReflections);
+          } else {
+            // Create new reflection with focus minutes
+            const newReflection = {
+              date: today,
+              good: '',
+              distraction: '',
+              improve: '',
+              focusMinutes: focusMinutes
+            };
+            const updatedReflections = [...get().reflections, newReflection];
+            set({ reflections: updatedReflections });
+            await saveReflections(currentUserId, updatedReflections);
+          }
         }
       }
       
