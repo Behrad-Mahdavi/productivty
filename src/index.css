@@ -18,6 +18,31 @@ body {
   color: #b0b0b0;
 }
 
+/* Mobile responsive improvements */
+@media (max-width: 576px) {
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .btn .lucide {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .h2 {
+    font-size: 1.5rem;
+  }
+  
+  .d-flex.gap-2 {
+    gap: 0.5rem !important;
+  }
+}
+
 /* Apply IRANSansXVF font to all elements */
 * {
   font-family: 'IRANSansXVF' !important;

@@ -62,22 +62,22 @@ export const Dashboard: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="d-flex align-items-center justify-content-between mb-4">
+      <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between mb-4 gap-3">
         <div>
           <h1 className="h2 mb-1 fw-bold text-dark">داشبورد</h1>
           <DateDisplay variant="compact" showTime={true} />
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-lg-auto">
           <button
             onClick={() => setShowReflectionForm(true)}
-            className="btn btn-success"
+            className="btn btn-success flex-fill"
           >
             <Brain size={16} className="me-1" />
             بازتاب روزانه
           </button>
           <button
             onClick={() => setShowTaskForm(true)}
-            className="btn btn-primary"
+            className="btn btn-primary flex-fill"
           >
             <Plus size={16} className="me-1" />
             کار جدید
