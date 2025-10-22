@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from './store/useStore';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { Layout } from './components/Layout';
 import { LoginOrSwitchUser } from './components/LoginOrSwitchUser';
 import { UserSelector } from './components/UserSelector';
-import { Dashboard } from './pages/Dashboard';
-import { TasksPage } from './pages/TasksPage';
-import { CoursesPage } from './pages/CoursesPage';
-import { ReflectionPage } from './pages/ReflectionPage';
-import { StatsPage } from './pages/StatsPage';
-import { GamificationPage } from './pages/GamificationPage';
+
+// Lazy load pages for better performance
+const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard }))  );
+const TasksPage = lazy(() => import('./pages/TasksPage').then(module => ({ default: module.TasksPage })));
+const CoursesPage = lazy(() => import('./pages/CoursesPage').then(module => ({ default: module.CoursesPage })));
+const ReflectionPage = lazy(() => import('./pages/ReflectionPage').then(module => ({ default: module.ReflectionPage })));
+const StatsPage = lazy(() => import('./pages/StatsPage').then(module => ({ default: module.StatsPage })));
+const GamificationPage = lazy(() => import('./pages/GamificationPage').then(module => ({ default: module.GamificationPage })));
 
 function AppContent() {
   const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync, loadGamificationData } = useStore();
@@ -67,6 +69,14 @@ function AppContent() {
     }
   };
 
+  const LoadingSpinner = () => (
+    <div className="d-flex justify-content-center align-items-center py-5">
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">در حال بارگذاری...</span>
+      </div>
+    </div>
+  );
+
   return (
     <Layout 
       currentPage={currentPage} 
@@ -81,7 +91,9 @@ function AppContent() {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
         >
-          {renderPage()}
+          <Suspense fallback={<LoadingSpinner />}>
+            {renderPage()}
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </Layout>

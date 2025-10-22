@@ -7,6 +7,8 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+  /* Preload for better performance */
+  font-preload: true;
 }
 
 /* Custom styles */

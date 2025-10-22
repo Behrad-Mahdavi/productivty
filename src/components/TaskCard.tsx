@@ -15,7 +15,7 @@ const categoryColors = {
   شخصی: 'badge-info',
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onStartTimer }) => {
+export const TaskCard: React.FC<TaskCardProps> = React.memo(({ task, onStartTimer }) => {
   const { toggleTask, deleteTask } = useStore();
 
   const handleToggle = () => {
@@ -81,4 +81,4 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStartTimer }) => {
       </div>
     </div>
   );
-};
+});
