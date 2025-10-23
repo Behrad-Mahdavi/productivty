@@ -601,7 +601,10 @@ export const useStore = create<AppStore>((set, get) => {
   
   getOverdueTasks: () => {
     const today = new Date().toISOString().split('T')[0];
-    const overdueTasks = get().tasks.filter(task => task.date < today && !task.done);
+    const allTasks = get().tasks;
+    console.log('All tasks:', allTasks.length, allTasks.map(t => ({ id: t.id, date: t.date, done: t.done })));
+    const overdueTasks = allTasks.filter(task => task.date < today && !task.done);
+    console.log('Today:', today);
     console.log('Overdue tasks:', overdueTasks.length, overdueTasks);
     return overdueTasks;
   },

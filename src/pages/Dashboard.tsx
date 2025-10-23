@@ -21,6 +21,7 @@ export const Dashboard: React.FC = () => {
   const [showReflectionForm, setShowReflectionForm] = useState(false);
   
   const todayTasks = getTodayTasks();
+  console.log('Dashboard - Getting overdue tasks...');
   const overdueTasks = getOverdueTasks();
   const progress = getTodayProgress();
   const focusMinutes = getFocusMinutesToday();
