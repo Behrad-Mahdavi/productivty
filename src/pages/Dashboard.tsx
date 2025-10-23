@@ -166,6 +166,7 @@ export const Dashboard: React.FC = () => {
                   {/* Overdue Tasks */}
                   {(() => { console.log('Rendering overdue tasks section, length:', overdueTasks.length, overdueTasks); return null; })()}
                   {(() => { console.log('Checking overdueTasks.length > 0:', overdueTasks.length > 0); return null; })()}
+                  {(() => { console.log('overdueTasks array:', overdueTasks); return null; })()}
                   {overdueTasks.length > 0 && (
                     <div className="mb-4">
                       {(() => { console.log('Rendering overdue tasks UI, count:', overdueTasks.length); return null; })()}
@@ -175,13 +176,16 @@ export const Dashboard: React.FC = () => {
                         </div>
                         <h6 className="mb-0 text-danger">کارهای گذشته ({overdueTasks.length})</h6>
                       </div>
-                      {overdueTasks.map((task) => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task} 
-                          onStartTimer={handleStartTimer}
-                        />
-                      ))}
+                      {overdueTasks.map((task) => {
+                        console.log('Rendering TaskCard for task:', task);
+                        return (
+                          <TaskCard 
+                            key={task.id} 
+                            task={task} 
+                            onStartTimer={handleStartTimer}
+                          />
+                        );
+                      })}
                     </div>
                   )}
                   
