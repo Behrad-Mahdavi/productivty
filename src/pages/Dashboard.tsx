@@ -10,6 +10,7 @@ import { DateDisplay } from '../components/DateDisplay';
 export const Dashboard: React.FC = () => {
   const { 
     getTodayTasks, 
+    getOverdueTasks,
     getTodayProgress, 
     getFocusMinutesToday, 
     getOverdueAssignments,
@@ -20,6 +21,7 @@ export const Dashboard: React.FC = () => {
   const [showReflectionForm, setShowReflectionForm] = useState(false);
   
   const todayTasks = getTodayTasks();
+  const overdueTasks = getOverdueTasks();
   const progress = getTodayProgress();
   const focusMinutes = getFocusMinutesToday();
   const overdueAssignments = getOverdueAssignments();
@@ -157,13 +159,41 @@ export const Dashboard: React.FC = () => {
                 </div>
               ) : (
                 <div>
-                  {todayTasks.map((task) => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      onStartTimer={handleStartTimer}
-                    />
-                  ))}
+                  {/* Overdue Tasks */}
+                  {overdueTasks.length > 0 && (
+                    <div className="mb-4">
+                      <div className="d-flex align-items-center mb-3">
+                        <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-2">
+                          <Target className="text-danger" size={16} />
+                        </div>
+                        <h6 className="mb-0 text-danger">کارهای گذشته ({overdueTasks.length})</h6>
+                      </div>
+                      {overdueTasks.map((task) => (
+                        <TaskCard 
+                          key={task.id} 
+                          task={task} 
+                          onStartTimer={handleStartTimer}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Today's Tasks */}
+                  <div>
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                        <Target className="text-primary" size={16} />
+                      </div>
+                      <h6 className="mb-0 text-primary">کارهای امروز ({todayTasks.length})</h6>
+                    </div>
+                    {todayTasks.map((task) => (
+                      <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        onStartTimer={handleStartTimer}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

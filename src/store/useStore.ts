@@ -66,6 +66,7 @@ interface AppStore {
   
   // Computed values
   getTodayTasks: () => Task[];
+  getOverdueTasks: () => Task[];
   getTodayProgress: () => number;
   getFocusMinutesToday: () => number;
   getOverdueAssignments: () => Assignment[];
@@ -482,7 +483,7 @@ export const useStore = create<AppStore>((set, get) => {
     const currentTimer = get().timerState;
     if (currentTimer) {
       // Only complete session if timer was actually running and has meaningful duration
-      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec) {
+      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec && currentTimer.remainingSec > 0) {
         const session = completeSession(currentTimer);
         
         // Add session to focusSessions
@@ -536,7 +537,7 @@ export const useStore = create<AppStore>((set, get) => {
     const currentTimer = get().timerState;
     if (currentTimer) {
       // Only complete session if timer was actually running and has meaningful duration
-      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec) {
+      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec && currentTimer.remainingSec > 0) {
         const session = completeSession(currentTimer);
         
         // Add session to focusSessions
@@ -596,6 +597,11 @@ export const useStore = create<AppStore>((set, get) => {
   getTodayTasks: () => {
     const today = new Date().toISOString().split('T')[0];
     return get().tasks.filter(task => task.date === today);
+  },
+  
+  getOverdueTasks: () => {
+    const today = new Date().toISOString().split('T')[0];
+    return get().tasks.filter(task => task.date < today && !task.done);
   },
   
   getTodayProgress: () => {
