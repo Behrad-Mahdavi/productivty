@@ -21,14 +21,10 @@ export const Dashboard: React.FC = () => {
   const [showReflectionForm, setShowReflectionForm] = useState(false);
   
   const todayTasks = getTodayTasks();
-  console.log('Dashboard - Getting overdue tasks...');
   const overdueTasks = getOverdueTasks();
   const progress = getTodayProgress();
   const focusMinutes = getFocusMinutesToday();
   const overdueAssignments = getOverdueAssignments();
-  
-  console.log('Dashboard - Today tasks:', todayTasks.length);
-  console.log('Dashboard - Overdue tasks:', overdueTasks.length);
 
   const handleStartTimer = (taskId: string) => {
     startTimer('work', taskId);
@@ -164,33 +160,25 @@ export const Dashboard: React.FC = () => {
               ) : (
                 <div>
                   {/* Overdue Tasks */}
-                  {(() => { console.log('Rendering overdue tasks section, length:', overdueTasks.length, overdueTasks); return null; })()}
-                  {(() => { console.log('Checking overdueTasks.length > 0:', overdueTasks.length > 0); return null; })()}
-                  {(() => { console.log('overdueTasks array:', overdueTasks); return null; })()}
                   {overdueTasks.length > 0 && (
                     <div className="mb-4">
-                      {(() => { console.log('Rendering overdue tasks UI, count:', overdueTasks.length); return null; })()}
                       <div className="d-flex align-items-center mb-3">
                         <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-2">
                           <Target className="text-danger" size={16} />
                         </div>
                         <h6 className="mb-0 text-danger">کارهای گذشته ({overdueTasks.length})</h6>
                       </div>
-                      {overdueTasks.map((task) => {
-                        console.log('Rendering TaskCard for task:', task);
-                        return (
-                          <TaskCard 
-                            key={task.id} 
-                            task={task} 
-                            onStartTimer={handleStartTimer}
-                          />
-                        );
-                      })}
+                      {overdueTasks.map((task) => (
+                        <TaskCard 
+                          key={task.id} 
+                          task={task} 
+                          onStartTimer={handleStartTimer}
+                        />
+                      ))}
                     </div>
                   )}
                   
                   {/* Today's Tasks */}
-                  {(() => { console.log('Rendering today tasks section, length:', todayTasks.length, todayTasks); return null; })()}
                   <div>
                     <div className="d-flex align-items-center mb-3">
                       <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
