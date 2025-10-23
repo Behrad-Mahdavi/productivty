@@ -208,7 +208,6 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
-
       {/* Overdue Assignments Alert */}
       {overdueAssignments.length > 0 && (
         <div className="alert alert-danger mt-4">
