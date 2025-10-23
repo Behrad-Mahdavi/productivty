@@ -165,8 +165,10 @@ export const Dashboard: React.FC = () => {
                 <div>
                   {/* Overdue Tasks */}
                   {(() => { console.log('Rendering overdue tasks section, length:', overdueTasks.length, overdueTasks); return null; })()}
+                  {(() => { console.log('Checking overdueTasks.length > 0:', overdueTasks.length > 0); return null; })()}
                   {overdueTasks.length > 0 && (
                     <div className="mb-4">
+                      {(() => { console.log('Rendering overdue tasks UI, count:', overdueTasks.length); return null; })()}
                       <div className="d-flex align-items-center mb-3">
                         <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-2">
                           <Target className="text-danger" size={16} />
