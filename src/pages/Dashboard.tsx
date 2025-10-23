@@ -25,6 +25,9 @@ export const Dashboard: React.FC = () => {
   const progress = getTodayProgress();
   const focusMinutes = getFocusMinutesToday();
   const overdueAssignments = getOverdueAssignments();
+  
+  console.log('Dashboard - Today tasks:', todayTasks.length);
+  console.log('Dashboard - Overdue tasks:', overdueTasks.length);
 
   const handleStartTimer = (taskId: string) => {
     startTimer('work', taskId);
