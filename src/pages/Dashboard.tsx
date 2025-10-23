@@ -159,25 +159,6 @@ export const Dashboard: React.FC = () => {
                 </div>
               ) : (
                 <div>
-                  {/* Overdue Tasks */}
-                  {overdueTasks.length > 0 && (
-                    <div className="mb-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-2">
-                          <Target className="text-danger" size={16} />
-                        </div>
-                        <h6 className="mb-0 text-danger">کارهای گذشته ({overdueTasks.length})</h6>
-                      </div>
-                      {overdueTasks.map((task) => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task} 
-                          onStartTimer={handleStartTimer}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  
                   {/* Today's Tasks */}
                   <div>
                     <div className="d-flex align-items-center mb-3">
@@ -199,6 +180,33 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        {/* Overdue Tasks Section */}
+        {overdueTasks.length > 0 && (
+          <div className="row mt-4">
+            <div className="col-12">
+              <div className="card border-danger">
+                <div className="card-header bg-danger bg-opacity-10">
+                  <div className="d-flex align-items-center">
+                    <div className="bg-danger bg-opacity-20 rounded-circle p-2 me-2">
+                      <Target className="text-danger" size={16} />
+                    </div>
+                    <h5 className="mb-0 text-danger">کارهای گذشته ({overdueTasks.length})</h5>
+                  </div>
+                </div>
+                <div className="card-body">
+                  {overdueTasks.map((task) => (
+                    <TaskCard 
+                      key={task.id} 
+                      task={task} 
+                      onStartTimer={handleStartTimer}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Overdue Assignments Alert */}
