@@ -164,6 +164,7 @@ export const Dashboard: React.FC = () => {
               ) : (
                 <div>
                   {/* Overdue Tasks */}
+                  {(() => { console.log('Rendering overdue tasks section, length:', overdueTasks.length, overdueTasks); return null; })()}
                   {overdueTasks.length > 0 && (
                     <div className="mb-4">
                       <div className="d-flex align-items-center mb-3">
@@ -183,6 +184,7 @@ export const Dashboard: React.FC = () => {
                   )}
                   
                   {/* Today's Tasks */}
+                  {(() => { console.log('Rendering today tasks section, length:', todayTasks.length, todayTasks); return null; })()}
                   <div>
                     <div className="d-flex align-items-center mb-3">
                       <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
