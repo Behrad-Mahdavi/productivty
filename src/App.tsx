@@ -1,5 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useStore } from './store/useStore';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { Layout } from './components/Layout';
@@ -15,7 +17,15 @@ const StatsPage = lazy(() => import('./pages/StatsPage').then(module => ({ defau
 const GamificationPage = lazy(() => import('./pages/GamificationPage').then(module => ({ default: module.GamificationPage })));
 
 function AppContent() {
-  const { loadAppData, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync, loadGamificationData } = useStore();
+  const { 
+    loadAppData, 
+    setCurrentUserId, 
+    setupRealtimeSync, 
+    cleanupRealtimeSync, 
+    loadGamificationData,
+    notification,
+    clearNotification
+  } = useStore();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const { isLoggedIn, loading, currentUser } = useUser();
 
@@ -32,6 +42,26 @@ function AppContent() {
       cleanupRealtimeSync();
     }
   }, [loadAppData, isLoggedIn, currentUser, setCurrentUserId, setupRealtimeSync, cleanupRealtimeSync, loadGamificationData]);
+
+  // ✅ اتصال سیستم اعلانات Zustand به react-toastify
+  useEffect(() => {
+    if (notification) {
+      const displayNotification = notification.type === 'success' ? toast.success : toast.error;
+      
+      displayNotification(notification.message, {
+        position: 'top-right',
+        autoClose: 5000, // خودکار بسته شدن بعد از 5 ثانیه
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        onClose: () => {
+          // در صورت بسته شدن دستی یا اتوماتیک، وضعیت استور را پاک کن
+          clearNotification();
+        }
+      });
+    }
+  }, [notification, clearNotification]);
 
   if (loading) {
     return (
@@ -78,25 +108,42 @@ function AppContent() {
   );
 
   return (
-    <Layout 
-      currentPage={currentPage} 
-      onPageChange={setCurrentPage}
-      userSelector={<UserSelector />}
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentPage}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Suspense fallback={<LoadingSpinner />}>
-            {renderPage()}
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
-    </Layout>
+    <>
+      <Layout 
+        currentPage={currentPage} 
+        onPageChange={setCurrentPage}
+        userSelector={<UserSelector />}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Suspense fallback={<LoadingSpinner />}>
+              {renderPage()}
+            </Suspense>
+          </motion.div>
+        </AnimatePresence>
+      </Layout>
+      
+      {/* ✅ سیستم اعلانات Toast */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true} // پشتیبانی از راست به چپ
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        toastClassName="rtl-toast" // کلاس سفارشی برای RTL
+      />
+    </>
   );
 }
 

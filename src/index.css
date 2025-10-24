@@ -599,3 +599,39 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
+
+/* ✅ استایل‌های سفارشی برای Toast اعلانات */
+.rtl-toast {
+  direction: rtl !important;
+  text-align: right !important;
+  font-family: 'IRANSansXVF', sans-serif !important;
+}
+
+.rtl-toast .Toastify__toast-body {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.rtl-toast .Toastify__close-button {
+  left: 0.5rem !important;
+  right: auto !important;
+}
+
+/* استایل‌های سفارشی برای انواع مختلف Toast */
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+}
+
+.Toastify__toast--error {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
+
+.Toastify__progress-bar--success {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
