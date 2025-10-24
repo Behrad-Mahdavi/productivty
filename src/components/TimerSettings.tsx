@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Settings, Save, RotateCcw, Plus, Edit, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
-export const TimerSettings: React.FC = () => {
+export const TimerSettings: React.FC = memo(() => {
   const { timerSettings, updateTimerSettings, addFocusSession, focusSessions, updateFocusSession, deleteFocusSession } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [manualMinutes, setManualMinutes] = useState(0);
   const [editingSession, setEditingSession] = useState<string | null>(null);
   const [editMinutes, setEditMinutes] = useState(0);
   
-  console.log('TimerSettings component rendered');
   const [settings, setSettings] = useState({
     workDuration: timerSettings.workDuration,
     shortBreakDuration: timerSettings.shortBreakDuration,
@@ -279,4 +278,4 @@ export const TimerSettings: React.FC = () => {
       )}
     </>
   );
-};
+});

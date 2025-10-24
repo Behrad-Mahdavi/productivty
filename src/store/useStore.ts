@@ -110,8 +110,11 @@ export const useStore = create<AppStore>((set, get) => {
   setupRealtimeSync: (userId: string) => {
     console.log('Setting up real-time sync for user:', userId);
     
-    // Clean up existing subscriptions
-    get().cleanupRealtimeSync();
+    // Clean up existing subscriptions only if there are any
+    if (unsubscribeFunctions.length > 0) {
+      console.log('Cleaning up existing subscriptions before setting up new ones');
+      get().cleanupRealtimeSync();
+    }
     
     // Subscribe to tasks
     const unsubscribeTasks = subscribeToTasks(userId, (tasks) => {

@@ -22,21 +22,15 @@ export const FocusTimer: React.FC = () => {
     stopTimer, 
     skipTimer,
     moveToNextPhase,
-    focusMinutesToday,    
-  } = useStore(state => ({
-    timerState: state.timerState,
-    startTimer: state.startTimer,
-    pauseTimer: state.pauseTimer,
-    resumeTimer: state.resumeTimer,
-    stopTimer: state.stopTimer,
-    skipTimer: state.skipTimer,
-    moveToNextPhase: state.moveToNextPhase,
-    focusMinutesToday: state.getFocusMinutesToday(), // فراخوانی تابع در انتخابگر
-  }));
+    getFocusMinutesToday
+  } = useStore();
 
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false); 
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // ✅ محاسبه focusMinutesToday در component به جای selector
+  const focusMinutesToday = getFocusMinutesToday(); 
 
   // --- مدیریت زمان و به‌روزرسانی ---
 
