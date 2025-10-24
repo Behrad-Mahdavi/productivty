@@ -35,6 +35,11 @@ interface AppStore {
   currentUserId: string | null;
   gamification: GamificationData | null;
   
+  // ✅ مدیریت خطا و وضعیت
+  isProcessing: boolean;
+  error: string | null;
+  notification: { id: string; message: string; type: 'success' | 'error' } | null;
+  
   // Actions
   setCurrentUserId: (userId: string | null) => void;
   loadAppData: (userId: string) => Promise<void>;
@@ -86,10 +91,33 @@ interface AppStore {
   // Helper functions (internal)
   _finalizeSession: (session: FocusSession) => Promise<void>;
   _syncGamification: () => Promise<void>;
+  
+  // ✅ اکشن‌های مدیریت خطا و اعلان
+  setNotification: (message: string, type: 'success' | 'error') => void;
+  clearNotification: () => void;
+  setError: (error: string | null) => void;
 }
 
 export const useStore = create<AppStore>((set, get) => {
   let unsubscribeFunctions: (() => void)[] = [];
+
+  // ✅ تابع کمکی ضدگلوله برای مدیریت خطا در عملیات async
+  const withAsyncErrorHandling = <T extends any[]>(
+    action: (...args: T) => Promise<void>,
+    successMessage: string
+  ) => async (...args: T) => {
+    try {
+      set({ isProcessing: true, error: null });
+      await action(...args);
+      get().setNotification(successMessage, 'success');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص رخ داد';
+      get().setNotification(errorMessage, 'error');
+      set({ error: errorMessage });
+    } finally {
+      set({ isProcessing: false });
+    }
+  };
 
   return {
     // Initial state
@@ -106,6 +134,11 @@ export const useStore = create<AppStore>((set, get) => {
       cyclesBeforeLongBreak: 4
     },
     currentUserId: null,
+    
+    // ✅ مقادیر اولیه مدیریت خطا
+    isProcessing: false,
+    error: null,
+    notification: null,
   
   setCurrentUserId: (userId: string | null) => {
     set({ currentUserId: userId });
@@ -261,19 +294,22 @@ export const useStore = create<AppStore>((set, get) => {
   },
   
   // Course actions
-  addCourse: async (courseData) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const newCourse: Course = {
-      ...courseData,
-      id: `course_${Date.now()}`,
-      assignments: []
-    };
-    const updatedCourses = [...get().courses, newCourse];
-    set({ courses: updatedCourses });
-    await saveCourses(currentUserId, updatedCourses);
-  },
+  addCourse: withAsyncErrorHandling(
+    async (courseData) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const newCourse: Course = {
+        ...courseData,
+        id: `course_${Date.now()}`,
+        assignments: []
+      };
+      const updatedCourses = [...get().courses, newCourse];
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'درس با موفقیت اضافه شد'
+  ),
   
   updateCourse: async (id, updates) => {
     const { currentUserId } = get();
@@ -286,35 +322,41 @@ export const useStore = create<AppStore>((set, get) => {
     await saveCourses(currentUserId, updatedCourses);
   },
   
-  deleteCourse: async (id) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedCourses = get().courses.filter(course => course.id !== id);
-    set({ courses: updatedCourses });
-    await saveCourses(currentUserId, updatedCourses);
-  },
+  deleteCourse: withAsyncErrorHandling(
+    async (id) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedCourses = get().courses.filter(course => course.id !== id);
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'درس با موفقیت حذف شد'
+  ),
 
   // Assignment actions
-  addAssignment: async (courseId, assignmentData) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const newAssignment: Assignment = {
-      ...assignmentData,
-      id: `assignment_${Date.now()}`,
-      courseId,
-    };
-    
-    const updatedCourses = get().courses.map(course =>
-      course.id === courseId
-        ? { ...course, assignments: [...course.assignments, newAssignment] }
-        : course
-    );
-    
-    set({ courses: updatedCourses });
-    await saveCourses(currentUserId, updatedCourses);
-  },
+  addAssignment: withAsyncErrorHandling(
+    async (courseId, assignmentData) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const newAssignment: Assignment = {
+        ...assignmentData,
+        id: `assignment_${Date.now()}`,
+        courseId,
+      };
+      
+      const updatedCourses = get().courses.map(course =>
+        course.id === courseId
+          ? { ...course, assignments: [...course.assignments, newAssignment] }
+          : course
+      );
+      
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'تکلیف با موفقیت اضافه شد'
+  ),
 
   updateAssignment: async (courseId, assignmentId, updates) => {
     const { currentUserId } = get();
@@ -573,100 +615,93 @@ export const useStore = create<AppStore>((set, get) => {
   },
 
   // Timer settings actions
-  updateTimerSettings: async (settings: Partial<TimerSettings>) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const currentSettings = get().timerSettings;
-    const newSettings = { ...currentSettings, ...settings };
-    
-    set({ timerSettings: newSettings });
-    
-    // Save to Firestore
-    try {
+  updateTimerSettings: withAsyncErrorHandling(
+    async (settings: Partial<TimerSettings>) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const currentSettings = get().timerSettings;
+      const newSettings = { ...currentSettings, ...settings };
+      
+      set({ timerSettings: newSettings });
       await setDoc(doc(db, 'timerSettings', currentUserId), newSettings);
-    } catch (error) {
-      console.error('Error saving timer settings:', error);
-    }
-  },
+    },
+    'تنظیمات تایمر با موفقیت ذخیره شد'
+  ),
 
-  addFocusSession: async (minutes: number) => {
-    const { currentUserId } = get();
-    if (!currentUserId || minutes <= 0) return;
-    
-    const now = new Date();
-    const session = {
-      id: `manual_session_${Date.now()}`,
-      taskId: undefined,
-      startTime: new Date(now.getTime() - minutes * 60 * 1000).toISOString(),
-      endTime: now.toISOString(),
-      durationSec: minutes * 60,
-      completed: true,
-      type: 'work' as const
-    };
-    
-    const updatedSessions = [...get().focusSessions, session];
-    set({ focusSessions: updatedSessions });
-    
-    // Save to Firestore
-    try {
+  addFocusSession: withAsyncErrorHandling(
+    async (minutes: number) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      if (minutes <= 0) throw new Error('مدت زمان باید بیشتر از صفر باشد');
+      
+      const now = new Date();
+      const session = {
+        id: `manual_session_${Date.now()}`,
+        taskId: undefined,
+        startTime: new Date(now.getTime() - minutes * 60 * 1000).toISOString(),
+        endTime: now.toISOString(),
+        durationSec: minutes * 60,
+        completed: true,
+        type: 'work' as const
+      };
+      
+      const updatedSessions = [...get().focusSessions, session];
+      set({ focusSessions: updatedSessions });
       await saveFocusSessions(currentUserId, updatedSessions);
       
       // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از اضافه کردن سشن
       await get()._syncGamification();
-    } catch (error) {
-      console.error('Error saving manual focus session:', error);
-    }
-  },
+    },
+    'سشن تمرکز با موفقیت اضافه شد'
+  ),
 
-  updateFocusSession: async (sessionId: string, minutes: number) => {
-    const { currentUserId } = get();
-    if (!currentUserId || minutes <= 0) return;
-    
-    const sessions = get().focusSessions;
-    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-    if (sessionIndex === -1) return;
-    
-    const session = sessions[sessionIndex];
-    const updatedSession = {
-      ...session,
-      durationSec: minutes * 60,
-      endTime: new Date(new Date(session.startTime).getTime() + minutes * 60 * 1000).toISOString()
-    };
-    
-    const updatedSessions = [...sessions];
-    updatedSessions[sessionIndex] = updatedSession;
-    set({ focusSessions: updatedSessions });
-    
-    // Save to Firestore
-    try {
+  updateFocusSession: withAsyncErrorHandling(
+    async (sessionId: string, minutes: number) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      if (minutes <= 0) throw new Error('مدت زمان باید بیشتر از صفر باشد');
+      
+      const sessions = get().focusSessions;
+      const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+      if (sessionIndex === -1) throw new Error('سشن مورد نظر یافت نشد');
+      
+      const session = sessions[sessionIndex];
+      const updatedSession = {
+        ...session,
+        durationSec: minutes * 60,
+        endTime: new Date(new Date(session.startTime).getTime() + minutes * 60 * 1000).toISOString()
+      };
+      
+      const updatedSessions = [...sessions];
+      updatedSessions[sessionIndex] = updatedSession;
+      set({ focusSessions: updatedSessions });
       await saveFocusSessions(currentUserId, updatedSessions);
       
       // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از ویرایش سشن
       await get()._syncGamification();
-    } catch (error) {
-      console.error('Error updating focus session:', error);
-    }
-  },
+    },
+    'سشن تمرکز با موفقیت ویرایش شد'
+  ),
 
-  deleteFocusSession: async (sessionId: string) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const sessions = get().focusSessions;
-    const updatedSessions = sessions.filter(s => s.id !== sessionId);
-    set({ focusSessions: updatedSessions });
-    
-    // Save to Firestore
-    try {
+  deleteFocusSession: withAsyncErrorHandling(
+    async (sessionId: string) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const sessions = get().focusSessions;
+      const sessionExists = sessions.some(s => s.id === sessionId);
+      if (!sessionExists) throw new Error('سشن مورد نظر یافت نشد');
+      
+      const updatedSessions = sessions.filter(s => s.id !== sessionId);
+      set({ focusSessions: updatedSessions });
       await saveFocusSessions(currentUserId, updatedSessions);
       
       // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از حذف سشن
       await get()._syncGamification();
-    } catch (error) {
-      console.error('Error deleting focus session:', error);
-    }
-  },
+    },
+    'سشن تمرکز با موفقیت حذف شد'
+  ),
 
   // ✅ تابع کمکی برای نهایی کردن سشن - حذف تکرار کد
   _finalizeSession: async (session: FocusSession) => {
@@ -885,6 +920,31 @@ export const useStore = create<AppStore>((set, get) => {
     } catch (error) {
       console.error('Error loading gamification data:', error);
     }
+  },
+
+  // ✅ اکشن‌های مدیریت خطا و اعلان
+  setNotification: (message: string, type: 'success' | 'error') => {
+    const id = `notification_${Date.now()}`;
+    set({ 
+      notification: { id, message, type },
+      error: null // پاک کردن خطای قبلی
+    });
+    
+    // پاک کردن خودکار اعلان بعد از 5 ثانیه
+    setTimeout(() => {
+      const currentNotification = get().notification;
+      if (currentNotification?.id === id) {
+        set({ notification: null });
+      }
+    }, 5000);
+  },
+
+  clearNotification: () => {
+    set({ notification: null });
+  },
+
+  setError: (error: string | null) => {
+    set({ error });
   }
 
   };
