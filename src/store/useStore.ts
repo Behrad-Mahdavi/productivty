@@ -178,6 +178,10 @@ export const useStore = create<AppStore>((set, get) => {
     const unsubscribeFocusSessions = subscribeToFocusSessions(userId, (sessions) => {
       console.log('Real-time focus sessions update received:', sessions.length);
       set({ focusSessions: sessions });
+      
+      // ✅ گام دوم: فراخوانی _syncGamification با داده‌ی جدید
+      //    (بعد از اینکه focusSessions به‌روز شده است)
+      get()._syncGamification();
     });
     
     // Store unsubscribe functions
@@ -773,8 +777,7 @@ export const useStore = create<AppStore>((set, get) => {
       const sessionsToSave = [...get().focusSessions, session];
       await saveFocusSessions(currentUserId, sessionsToSave);
       
-      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از اضافه کردن سشن
-      await get()._syncGamification();
+      // ✅ آمار توسط Listener به‌روزرسانی می‌شود
     },
     'سشن تمرکز با موفقیت اضافه شد'
   ),
@@ -801,8 +804,7 @@ export const useStore = create<AppStore>((set, get) => {
       updatedSessions[sessionIndex] = updatedSession;
       await saveFocusSessions(currentUserId, updatedSessions);
       
-      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از ویرایش سشن
-      await get()._syncGamification();
+      // ✅ آمار توسط Listener به‌روزرسانی می‌شود
     },
     'سشن تمرکز با موفقیت ویرایش شد'
   ),
@@ -820,8 +822,7 @@ export const useStore = create<AppStore>((set, get) => {
       const updatedSessions = sessions.filter(s => s.id !== sessionId);
       await saveFocusSessions(currentUserId, updatedSessions);
       
-      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از حذف سشن
-      await get()._syncGamification();
+      // ✅ آمار توسط Listener به‌روزرسانی می‌شود
     },
     'سشن تمرکز با موفقیت حذف شد'
   ),
@@ -838,41 +839,11 @@ export const useStore = create<AppStore>((set, get) => {
     // ✅ گام دوم: ذخیره در Firestore و منتظر Listener باش
     await saveFocusSessions(currentUserId, sessionsToSave);
     
-    // اضافه کردن focus minutes به reflection اگر سشن کار باشد
-    if (session.type === 'work' && session.durationSec > 0) {
-      const focusMinutes = Math.round(session.durationSec / 60);
-      const today = new Date().toISOString().split('T')[0];
-      
-      // دریافت یا ایجاد reflection امروز
-      const todayReflection = get().reflections.find(r => r.date === today);
-      if (todayReflection) {
-        // به‌روزرسانی reflection موجود
-        const updatedReflection = {
-          ...todayReflection,
-          focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-        };
-        const updatedReflections = get().reflections.map(r => 
-          r.date === today ? updatedReflection : r
-        );
-        set({ reflections: updatedReflections });
-        await saveReflections(currentUserId, updatedReflections);
-      } else {
-        // ایجاد reflection جدید با focus minutes
-        const newReflection = {
-          date: today,
-          good: '',
-          distraction: '',
-          improve: '',
-          focusMinutes: focusMinutes
-        };
-        const updatedReflections = [...get().reflections, newReflection];
-        set({ reflections: updatedReflections });
-        await saveReflections(currentUserId, updatedReflections);
-      }
-    }
+    // ✅ اعتماد به Real-time Sync برای Reflections
+    //    منطق به‌روزرسانی محلی Reflections حذف شد
+    //    Listener Reflections باید بقیه کارها را انجام دهد
     
-    // ✅ _syncGamification باید بعد از ذخیره موفق فراخوانی شود
-    await get()._syncGamification();
+    // ✅ آمار توسط Listener به‌روزرسانی می‌شود
   },
 
   // ✅ لایه هماهنگ‌سازی گیمیفیکیشن - به‌روزرسانی خودکار آمار
