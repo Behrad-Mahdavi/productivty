@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, BookOpen, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { DateDisplay } from '../components/DateDisplay';
@@ -51,7 +51,7 @@ export const CoursesPage: React.FC = () => {
     }
   };
 
-  // بستن dropdown با کلیک خارج از آن
+  // ✅ بهبود مدیریت dropdown - جلوگیری از تداخل با عملیات داخلی
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -62,19 +62,33 @@ export const CoursesPage: React.FC = () => {
     };
 
     if (openDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+      // ✅ تاخیر کوتاه برای جلوگیری از تداخل با onClick handlers
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, [openDropdown]);
 
+  // ✅ رفع باگ منطقی تاریخ - مقایسه فقط بر اساس روز، نه ساعت
   const isOverdue = (dueDate: string) => {
-    return new Date(dueDate) < new Date();
+    const today = new Date();
+    // تاریخ امروز را به ۰۰:۰۰:۰۰ تبدیل کن تا فقط روزها مقایسه شوند
+    today.setHours(0, 0, 0, 0); 
+    
+    // تاریخ سررسید (که ۰۰:۰۰:۰۰ است)
+    const due = new Date(dueDate);
+
+    // اگر تاریخ سررسید کوچکتر از تاریخ امروز (در ۰۰:۰۰:۰۰) باشد، گذشته است
+    return due < today;
   };
 
-  const getUpcomingAssignments = () => {
+  // ✅ بهینه‌سازی عملکرد با useMemo - محاسبات سنگین فقط در صورت تغییر courses
+  const assignmentStats = useMemo(() => {
     const allAssignments = courses.flatMap(course => 
       course.assignments.map(assignment => ({
         ...assignment,
@@ -83,13 +97,17 @@ export const CoursesPage: React.FC = () => {
       }))
     );
     
-    return allAssignments
+    const overdue = allAssignments.filter(a => isOverdue(a.dueDate) && !a.done).length;
+    const totalRemaining = allAssignments.filter(a => !a.done).length;
+    const totalDone = allAssignments.filter(a => a.done).length;
+    
+    const upcomingAssignments = allAssignments
       .filter(assignment => !assignment.done)
       .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
       .slice(0, 5);
-  };
-
-  const upcomingAssignments = getUpcomingAssignments();
+    
+    return { overdue, totalRemaining, totalDone, upcomingAssignments };
+  }, [courses]);
 
   return (
     <div className="container-fluid py-4">
@@ -129,7 +147,7 @@ export const CoursesPage: React.FC = () => {
                 <AlertTriangle size={24} className="me-3" />
                 <div>
                   <h4 className="mb-0">
-                    {courses.flatMap(c => c.assignments).filter(a => isOverdue(a.dueDate) && !a.done).length}
+                    {assignmentStats.overdue}
                   </h4>
                   <small>تکالیف گذشته</small>
                 </div>
@@ -145,7 +163,7 @@ export const CoursesPage: React.FC = () => {
                 <Calendar size={24} className="me-3" />
                 <div>
                   <h4 className="mb-0">
-                    {courses.flatMap(c => c.assignments).filter(a => !a.done).length}
+                    {assignmentStats.totalRemaining}
                   </h4>
                   <small>تکالیف باقی‌مانده</small>
                 </div>
@@ -161,7 +179,7 @@ export const CoursesPage: React.FC = () => {
                 <CheckCircle size={24} className="me-3" />
                 <div>
                   <h4 className="mb-0">
-                    {courses.flatMap(c => c.assignments).filter(a => a.done).length}
+                    {assignmentStats.totalDone}
                   </h4>
                   <small>تکالیف انجام‌شده</small>
                 </div>
@@ -172,14 +190,14 @@ export const CoursesPage: React.FC = () => {
       </div>
 
       {/* Upcoming Assignments */}
-      {upcomingAssignments.length > 0 && (
+      {assignmentStats.upcomingAssignments.length > 0 && (
         <div className="card mb-4">
           <div className="card-header">
             <h5 className="mb-0">تکالیف نزدیک</h5>
           </div>
           <div className="card-body">
             <div className="row">
-              {upcomingAssignments.map((assignment, index) => (
+              {assignmentStats.upcomingAssignments.map((assignment, index) => (
                 <div key={index} className="col-md-6 col-lg-4 mb-3">
                   <div className={`card h-100 ${isOverdue(assignment.dueDate) ? 'border-danger' : 'border-warning'}`}>
                     <div className="card-body">
@@ -253,7 +271,11 @@ export const CoursesPage: React.FC = () => {
                           <button
                             className="btn btn-sm btn-outline-secondary"
                             type="button"
-                            onClick={() => setOpenDropdown(openDropdown === course.id ? null : course.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdown(openDropdown === course.id ? null : course.id);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
                           >
                             ⋮
                           </button>
@@ -447,15 +469,23 @@ export const CoursesPage: React.FC = () => {
                       className="form-select"
                       value={newAssignment.courseId}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, courseId: e.target.value }))}
+                      disabled={newAssignment.courseId !== ''} // ✅ قفل کردن اگر از کارت درس آمده
                       required
                     >
-                      <option value="">انتخاب کنید...</option>
+                      {newAssignment.courseId === '' && (
+                        <option value="">انتخاب کنید...</option>
+                      )}
                       {courses.map(course => (
                         <option key={course.id} value={course.id}>
                           {course.name} ({course.code})
                         </option>
                       ))}
                     </select>
+                    {newAssignment.courseId !== '' && (
+                      <div className="form-text text-muted">
+                        <small>این تکلیف مختص درس انتخاب‌شده است</small>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="mb-3">
@@ -499,6 +529,15 @@ export const CoursesPage: React.FC = () => {
                   >
                     انصراف
                   </button>
+                  {newAssignment.courseId !== '' && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-warning me-2"
+                      onClick={() => setNewAssignment(prev => ({ ...prev, courseId: '' }))}
+                    >
+                      تغییر درس
+                    </button>
+                  )}
                   <button
                     type="submit"
                     className="btn btn-primary"
