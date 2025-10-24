@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Clock, 
   CheckCircle, 
@@ -13,13 +13,41 @@ import { useStore } from '../store/useStore';
 import { formatPersianDate, getPersianDayName } from '../utils/dateUtils';
 
 export const StatsPage: React.FC = () => {
-  const { tasks, reflections, focusSessions } = useStore();
+  const { tasks, reflections, focusSessions, updateReflection } = useStore();
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [todayNote, setTodayNote] = useState('');
   const [todayRating, setTodayRating] = useState(0);
 
-  // Force refresh to clear cache
-  console.log('Stats page loaded - cache cleared');
+  // ✅ بارگذاری یادداشت امروز از reflections
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayReflection = reflections.find(r => r.date === today);
+    
+    if (todayReflection) {
+      setTodayNote(todayReflection.note || '');
+      setTodayRating(todayReflection.rating || 0);
+    }
+  }, [reflections]);
+
+  // ✅ ذخیره خودکار یادداشت با debounce
+  const saveTodayNote = useCallback(async () => {
+    if (!todayNote.trim() && todayRating === 0) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    await updateReflection(today, {
+      note: todayNote,
+      rating: todayRating
+    });
+  }, [todayNote, todayRating, updateReflection]);
+
+  // ✅ debounce برای ذخیره خودکار
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveTodayNote();
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [saveTodayNote]);
 
 
   // محاسبه آمار بر اساس بازه زمانی انتخاب شده
@@ -92,7 +120,11 @@ export const StatsPage: React.FC = () => {
       date.setDate(endDate.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const dayTasks = tasks.filter(task => task.date === dateStr);
+      // ✅ رفع باگ: تبدیل تاریخ تسک‌ها به فرمت YYYY-MM-DD
+      const dayTasks = tasks.filter(task => {
+        const taskDateStr = new Date(task.date).toISOString().split('T')[0];
+        return taskDateStr === dateStr;
+      });
       const dayReflections = reflections.filter(reflection => reflection.date === dateStr);
       const dayFocusSessions = focusSessions.filter(session => {
         const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
@@ -122,7 +154,7 @@ export const StatsPage: React.FC = () => {
     return days;
   }, [tasks, reflections, focusSessions, timeRange]);
 
-  // آمار تمرکز بر اساس ساعت روز (داینامیک)
+  // ✅ آمار تمرکز بر اساس ساعت روز (داینامیک) - برای نمایش کلی
   const hourlyFocusStats = useMemo(() => {
     const { startDate, endDate } = getDateRange();
     const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -150,6 +182,38 @@ export const StatsPage: React.FC = () => {
     });
   }, [focusSessions, timeRange]);
 
+  // ✅ محاسبه آمار روزانه-ساعتی برای نقشه حرارتی واقعی
+  const dailyHourlyFocusStats = useMemo(() => {
+    const { startDate, endDate } = getDateRange();
+    
+    // ایجاد ساختار Map<DayOfWeek, Map<Hour, Minutes>>
+    const statsByDayAndHour: Record<number, Record<number, number>> = {};
+    
+    // مقداردهی اولیه
+    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+      statsByDayAndHour[dayIndex] = {};
+      for (let hour = 0; hour < 24; hour++) {
+        statsByDayAndHour[dayIndex][hour] = 0;
+      }
+    }
+    
+    // پردازش sessions
+    focusSessions.forEach(session => {
+      if (session.type !== 'work') return;
+      
+      const sessionDate = new Date(session.startTime);
+      if (sessionDate < startDate || sessionDate > endDate) return;
+      
+      const dayOfWeek = sessionDate.getDay(); // 0 = یکشنبه, 1 = دوشنبه, ...
+      const hour = sessionDate.getHours();
+      const minutes = Math.round(session.durationSec / 60);
+      
+      statsByDayAndHour[dayOfWeek][hour] += minutes;
+    });
+    
+    return statsByDayAndHour;
+  }, [focusSessions, timeRange]);
+
   // بهترین و ضعیف‌ترین روز
   const bestDay = dailyStats.reduce((best, day) => 
     day.focusMinutes > best.focusMinutes ? day : best, dailyStats[0] || { focusMinutes: 0 }
@@ -159,8 +223,19 @@ export const StatsPage: React.FC = () => {
     day.focusMinutes < worst.focusMinutes ? day : worst, dailyStats[0] || { focusMinutes: 0 }
   );
 
-  // Streak calculation (داینامیک)
+  // ✅ بهینه‌سازی Streak calculation از O(N*M) به O(N+M)
   const streakDays = useMemo(() => {
+    // ✅ گام ۱: نقشه‌برداری یک‌باره داده‌ها
+    const focusMinutesByDay = focusSessions.reduce((acc, session) => {
+      if (session.type !== 'work') return acc;
+      const dateStr = new Date(session.startTime).toISOString().split('T')[0];
+      const minutes = Math.round(session.durationSec / 60);
+      
+      acc[dateStr] = (acc[dateStr] || 0) + minutes;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // ✅ گام ۲: حلقه بهینه شده
     let streak = 0;
     const today = new Date();
     
@@ -169,14 +244,7 @@ export const StatsPage: React.FC = () => {
       checkDate.setDate(today.getDate() - i);
       const dateStr = checkDate.toISOString().split('T')[0];
       
-      const dayFocusSessions = focusSessions.filter(session => {
-        const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
-        return sessionDate === dateStr;
-      });
-      
-      const dayFocusMinutes = dayFocusSessions
-        .filter(session => session.type === 'work')
-        .reduce((total, session) => total + Math.round(session.durationSec / 60), 0);
+      const dayFocusMinutes = focusMinutesByDay[dateStr] || 0; // ✅ دسترسی مستقیم O(1)
       
       if (dayFocusMinutes > 0) {
         streak++;
@@ -325,9 +393,11 @@ export const StatsPage: React.FC = () => {
                         {Array.from({ length: 7 }, (_, dayIndex) => (
                           <div key={dayIndex} className="heatmap-row">
                             {Array.from({ length: 24 }, (_, hourIndex) => {
-                              const hour = hourlyFocusStats[hourIndex];
-                              const intensity = Math.min(1, hour.minutes / 30); // Normalize to 0-1 (30 min max)
-                              const hasData = hour.minutes > 0;
+                              // ✅ استفاده از داده‌های واقعی روزانه-ساعتی
+                              const dayStats = dailyHourlyFocusStats[dayIndex];
+                              const minutes = dayStats ? dayStats[hourIndex] || 0 : 0;
+                              const intensity = Math.min(1, minutes / 30); // Normalize to 0-1 (30 min max)
+                              const hasData = minutes > 0;
                               
                               return (
                                 <div
@@ -340,7 +410,7 @@ export const StatsPage: React.FC = () => {
                                     border: hasData ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(200, 200, 200, 0.3)',
                                     opacity: hasData ? 1 : 0.5
                                   }}
-                                  title={`${hour.label}: ${hour.minutes} دقیقه`}
+                                  title={`${hourIndex}:00: ${minutes} دقیقه`}
                                 ></div>
                               );
                             })}

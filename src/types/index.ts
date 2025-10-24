@@ -30,6 +30,8 @@ export interface Reflection {
   distraction: string;
   improve: string;
   focusMinutes?: number;
+  note?: string;
+  rating?: number;
 }
 
 export interface FocusSession {
