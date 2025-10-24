@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, CheckCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { TaskCard } from '../components/TaskCard';
@@ -13,15 +13,27 @@ export const TasksPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<'همه' | 'دانشگاه' | 'پروژه' | 'شخصی'>('همه');
   const [statusFilter, setStatusFilter] = useState<'همه' | 'انجام‌شده' | 'انجام‌نشده'>('همه');
 
-  const filteredTasks = tasks.filter(task => {
-    const dateMatch = task.date === selectedDate;
-    const categoryMatch = categoryFilter === 'همه' || task.category === categoryFilter;
-    const statusMatch = statusFilter === 'همه' || 
-      (statusFilter === 'انجام‌شده' && task.done) ||
-      (statusFilter === 'انجام‌نشده' && !task.done);
-    
-    return dateMatch && categoryMatch && statusMatch;
-  });
+  // ✅ ریست کردن فیلترها با تغییر تاریخ برای بهبود UX
+  useEffect(() => {
+    // فقط اگر فیلترها روی حالت پیش‌فرض نیستند، آن‌ها را ریست کن
+    if (categoryFilter !== 'همه' || statusFilter !== 'همه') {
+      setCategoryFilter('همه');
+      setStatusFilter('همه');
+    }
+  }, [selectedDate]);
+
+  // ✅ بهینه‌سازی عملکرد با useMemo - فیلترینگ فقط در صورت تغییر وابستگی‌ها
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const dateMatch = task.date === selectedDate;
+      const categoryMatch = categoryFilter === 'همه' || task.category === categoryFilter;
+      const statusMatch = statusFilter === 'همه' || 
+        (statusFilter === 'انجام‌شده' && task.done) ||
+        (statusFilter === 'انجام‌نشده' && !task.done);
+      
+      return dateMatch && categoryMatch && statusMatch;
+    });
+  }, [tasks, selectedDate, categoryFilter, statusFilter]); // ✅ وابستگی‌های مشخص
 
   const handleStartTimer = (taskId: string) => {
     startTimer('work', taskId);
@@ -147,7 +159,10 @@ export const TasksPage: React.FC = () => {
 
       {/* Task Form */}
       {showTaskForm && (
-        <TaskForm onClose={() => setShowTaskForm(false)} />
+        <TaskForm 
+          onClose={() => setShowTaskForm(false)} 
+          defaultDate={selectedDate} // ✅ ارسال تاریخ انتخاب‌شده
+        />
       )}
     </div>
   );

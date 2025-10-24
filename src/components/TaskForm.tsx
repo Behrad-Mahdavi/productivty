@@ -5,13 +5,15 @@ import { PersianDatePicker } from './PersianDatePicker';
 
 interface TaskFormProps {
   onClose: () => void;
+  defaultDate?: string; // ✅ اضافه کردن prop برای تاریخ پیش‌فرض
 }
 
-export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
+export const TaskForm: React.FC<TaskFormProps> = ({ onClose, defaultDate }) => {
   const { addTask } = useStore();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'دانشگاه' | 'پروژه' | 'شخصی'>('دانشگاه');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  // ✅ استفاده از defaultDate یا تاریخ امروز به عنوان پیش‌فرض
+  const [date, setDate] = useState(defaultDate || new Date().toISOString().split('T')[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
