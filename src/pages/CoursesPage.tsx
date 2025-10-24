@@ -125,13 +125,16 @@ export const CoursesPage: React.FC = () => {
 
   // ✅ بهینه‌سازی عملکرد با useMemo - محاسبات سنگین فقط در صورت تغییر courses
   const assignmentStats = useMemo(() => {
-    const allAssignments = courses.flatMap(course => 
-      course.assignments.map(assignment => ({
-        ...assignment,
-        courseName: course.name,
-        courseCode: course.code
-      }))
-    );
+    // ✅ بررسی ایمنی: مطمئن شو courses و assignments وجود دارند
+    const allAssignments = courses
+      .filter(course => course && course.assignments && Array.isArray(course.assignments))
+      .flatMap(course => 
+        course.assignments.map(assignment => ({
+          ...assignment,
+          courseName: course.name,
+          courseCode: course.code
+        }))
+      );
     
     const overdue = allAssignments.filter(a => isOverdue(a.dueDate) && !a.done).length;
     const totalRemaining = allAssignments.filter(a => !a.done).length;
@@ -364,22 +367,22 @@ export const CoursesPage: React.FC = () => {
                         <div className="d-flex justify-content-between align-items-center mb-1">
                           <small className="text-muted">تکالیف</small>
                           <small className="text-muted">
-                            {course.assignments.filter(a => a.done).length} / {course.assignments.length}
+                            {course.assignments?.filter(a => a.done).length || 0} / {course.assignments?.length || 0}
                           </small>
                         </div>
                         <div className="progress" style={{ height: '6px' }}>
                           <div
                             className="progress-bar"
                             style={{
-                              width: course.assignments.length > 0 
-                                ? `${(course.assignments.filter(a => a.done).length / course.assignments.length) * 100}%`
+                              width: course.assignments && course.assignments.length > 0 
+                                ? `${((course.assignments.filter(a => a.done).length / course.assignments.length) * 100)}%`
                                 : '0%'
                             }}
                           ></div>
                         </div>
                       </div>
                       
-                      {course.assignments.length > 0 && (
+                      {course.assignments && course.assignments.length > 0 && (
                         <div className="assignment-list">
                           {course.assignments.slice(0, 3).map((assignment) => (
                             <div key={assignment.id} className="mb-2">
@@ -404,14 +407,14 @@ export const CoursesPage: React.FC = () => {
                                   <small className="text-muted">{assignment.description}</small>
                                 </div>
                               )}
-                              {assignment.estimatedHours > 0 && (
+                              {assignment.estimatedHours && assignment.estimatedHours > 0 && (
                                 <div className="ms-4">
                                   <small className="text-info">
                                     ⏱️ {assignment.estimatedHours} ساعت تخمینی
                                   </small>
                                 </div>
                               )}
-                              {assignment.linkedTaskIds.length > 0 && (
+                              {assignment.linkedTaskIds && assignment.linkedTaskIds.length > 0 && (
                                 <div className="ms-4">
                                   <small className="text-success">
                                     ✅ {assignment.linkedTaskIds.length} تسک برنامه‌ریزی شده
@@ -420,7 +423,7 @@ export const CoursesPage: React.FC = () => {
                               )}
                             </div>
                           ))}
-                          {course.assignments.length > 3 && (
+                          {course.assignments && course.assignments.length > 3 && (
                             <small className="text-muted">
                               و {course.assignments.length - 3} تکلیف دیگر...
                             </small>

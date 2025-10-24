@@ -226,11 +226,18 @@ export const useStore = create<AppStore>((set, get) => {
       }
       
       console.log('Setting app data:', data);
+      
+      // ✅ ایمن‌سازی داده‌های courses - تضمین وجود assignments
+      const safeCourses = (data.courses || []).map(course => ({
+        ...course,
+        assignments: course.assignments || []
+      }));
+      
       set({ 
-        tasks: data.tasks,
-        courses: data.courses,
-        reflections: data.reflections,
-        focusSessions: data.focusSessions,
+        tasks: data.tasks || [],
+        courses: safeCourses,
+        reflections: data.reflections || [],
+        focusSessions: data.focusSessions || [],
         timerState,
         timerSettings: data.timerSettings || {
           workDuration: 25,
@@ -305,7 +312,8 @@ export const useStore = create<AppStore>((set, get) => {
       const newCourse: Course = {
         ...courseData,
         id: `course_${Date.now()}`,
-        assignments: []
+        // ✅ تضمین وجود آرایه assignments
+        assignments: courseData.assignments || []
       };
       const updatedCourses = [...get().courses, newCourse];
       set({ courses: updatedCourses });
@@ -669,11 +677,14 @@ export const useStore = create<AppStore>((set, get) => {
     const overdue: Assignment[] = [];
     
     get().courses.forEach(course => {
-      course.assignments.forEach(assignment => {
-        if (!assignment.done && assignment.dueDate < today) {
-          overdue.push(assignment);
-        }
-      });
+      // ✅ بررسی ایمنی: مطمئن شو assignments وجود دارد و آرایه است
+      if (course.assignments && Array.isArray(course.assignments)) {
+        course.assignments.forEach(assignment => {
+          if (!assignment.done && assignment.dueDate < today) {
+            overdue.push(assignment);
+          }
+        });
+      }
     });
     
     return overdue;
