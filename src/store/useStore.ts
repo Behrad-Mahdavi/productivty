@@ -82,6 +82,10 @@ interface AppStore {
   calculateUserStats: (userId: string) => UserStats;
   updateLeaderboard: () => Promise<void>;
   loadGamificationData: (userId: string) => Promise<void>;
+  
+  // Helper functions (internal)
+  _finalizeSession: (session: FocusSession) => Promise<void>;
+  _syncGamification: () => Promise<void>;
 }
 
 export const useStore = create<AppStore>((set, get) => {
@@ -162,50 +166,23 @@ export const useStore = create<AppStore>((set, get) => {
       const data = await loadData(userId);
       const timerState = await loadTimerState(userId);
       
-      // Check if timer needs to be completed
+      // ✅ بررسی اینکه آیا تایمر در زمان دور بودن کاربر تمام شده
       if (timerState && !timerState.isPaused) {
         const elapsed = calculateElapsedTime(timerState);
         if (elapsed >= timerState.durationSec) {
-          // Timer completed while away - complete the session and add focus minutes
+          // تایمر در زمان دور بودن تمام شده - نهایی کردن سشن
           const session = completeSession(timerState);
-          const updatedFocusSessions = [...data.focusSessions, session];
-          set({ focusSessions: updatedFocusSessions });
-          await saveFocusSessions(userId, updatedFocusSessions);
           
-          // Add focus minutes to today's reflection if it's a work session
-          if (timerState.mode === 'work' && session.durationSec > 0) {
-            const focusMinutes = Math.round(session.durationSec / 60);
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Get or create today's reflection
-            const todayReflection = data.reflections.find(r => r.date === today);
-            if (todayReflection) {
-              // Update existing reflection
-              const updatedReflection = {
-                ...todayReflection,
-                focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-              };
-              const updatedReflections = data.reflections.map(r => 
-                r.date === today ? updatedReflection : r
-              );
-              set({ reflections: updatedReflections });
-              await saveReflections(userId, updatedReflections);
-            } else {
-              // Create new reflection with focus minutes
-              const newReflection = {
-                date: today,
-                good: '',
-                distraction: '',
-                improve: '',
-                focusMinutes: focusMinutes
-              };
-              const updatedReflections = [...data.reflections, newReflection];
-              set({ reflections: updatedReflections });
-              await saveReflections(userId, updatedReflections);
-            }
-          }
+          // تنظیم داده‌های اولیه برای _finalizeSession
+          set({ 
+            focusSessions: data.focusSessions,
+            reflections: data.reflections
+          });
           
-          // Clear timer state instead of starting new one
+          // نهایی کردن سشن با استفاده از تابع مشترک
+          await get()._finalizeSession(session);
+          
+          // پاک کردن وضعیت تایمر
           set({ timerState: null });
           await saveTimerState(userId, null);
           return;
@@ -278,6 +255,9 @@ export const useStore = create<AppStore>((set, get) => {
     );
     set({ tasks: updatedTasks });
     await saveTasks(currentUserId, updatedTasks);
+    
+    // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از تغییر تسک
+    await get()._syncGamification();
   },
   
   // Course actions
@@ -486,47 +466,10 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // Only complete session if timer was actually running and has meaningful duration
+      // ✅ فقط اگر تایمر واقعاً در حال اجرا بوده و مدت زمان معناداری داشته
       if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec && currentTimer.remainingSec > 0) {
         const session = completeSession(currentTimer);
-        
-        // Add session to focusSessions
-        const updatedFocusSessions = [...get().focusSessions, session];
-        set({ focusSessions: updatedFocusSessions });
-        await saveFocusSessions(currentUserId, updatedFocusSessions);
-        
-        // Add focus minutes to today's reflection if it's a work session
-        if (currentTimer.mode === 'work' && session.durationSec > 0) {
-          const focusMinutes = Math.round(session.durationSec / 60);
-          const today = new Date().toISOString().split('T')[0];
-          
-          // Get or create today's reflection
-          const todayReflection = get().reflections.find(r => r.date === today);
-          if (todayReflection) {
-            // Update existing reflection
-            const updatedReflection = {
-              ...todayReflection,
-              focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-            };
-            const updatedReflections = get().reflections.map(r => 
-              r.date === today ? updatedReflection : r
-            );
-            set({ reflections: updatedReflections });
-            await saveReflections(currentUserId, updatedReflections);
-          } else {
-            // Create new reflection with focus minutes
-            const newReflection = {
-              date: today,
-              good: '',
-              distraction: '',
-              improve: '',
-              focusMinutes: focusMinutes
-            };
-            const updatedReflections = [...get().reflections, newReflection];
-            set({ reflections: updatedReflections });
-            await saveReflections(currentUserId, updatedReflections);
-          }
-        }
+        await get()._finalizeSession(session);
       }
       
       set({ timerState: null });
@@ -540,47 +483,10 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // Only complete session if timer was actually running and has meaningful duration
+      // ✅ فقط اگر تایمر واقعاً در حال اجرا بوده و مدت زمان معناداری داشته
       if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec && currentTimer.remainingSec > 0) {
         const session = completeSession(currentTimer);
-        
-        // Add session to focusSessions
-        const updatedFocusSessions = [...get().focusSessions, session];
-        set({ focusSessions: updatedFocusSessions });
-        await saveFocusSessions(currentUserId, updatedFocusSessions);
-        
-        // Add focus minutes to today's reflection if it's a work session
-        if (currentTimer.mode === 'work' && session.durationSec > 0) {
-          const focusMinutes = Math.round(session.durationSec / 60);
-          const today = new Date().toISOString().split('T')[0];
-          
-          // Get or create today's reflection
-          const todayReflection = get().reflections.find(r => r.date === today);
-          if (todayReflection) {
-            // Update existing reflection
-            const updatedReflection = {
-              ...todayReflection,
-              focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-            };
-            const updatedReflections = get().reflections.map(r => 
-              r.date === today ? updatedReflection : r
-            );
-            set({ reflections: updatedReflections });
-            await saveReflections(currentUserId, updatedReflections);
-          } else {
-            // Create new reflection with focus minutes
-            const newReflection = {
-              date: today,
-              good: '',
-              distraction: '',
-              improve: '',
-              focusMinutes: focusMinutes
-            };
-            const updatedReflections = [...get().reflections, newReflection];
-            set({ reflections: updatedReflections });
-            await saveReflections(currentUserId, updatedReflections);
-          }
-        }
+        await get()._finalizeSession(session);
       }
       
       const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
@@ -603,58 +509,21 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // Complete the current session
+      // ✅ نهایی کردن سشن فعلی
       const session = completeSession(currentTimer);
+      await get()._finalizeSession(session);
       
-      // Add session to focusSessions
-      const updatedFocusSessions = [...get().focusSessions, session];
-      set({ focusSessions: updatedFocusSessions });
-      await saveFocusSessions(currentUserId, updatedFocusSessions);
-      
-      // Add focus minutes to today's reflection if it's a work session
-      if (currentTimer.mode === 'work' && session.durationSec > 0) {
-        const focusMinutes = Math.round(session.durationSec / 60);
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Get or create today's reflection
-        const todayReflection = get().reflections.find(r => r.date === today);
-        if (todayReflection) {
-          // Update existing reflection
-          const updatedReflection = {
-            ...todayReflection,
-            focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
-          };
-          const updatedReflections = get().reflections.map(r => 
-            r.date === today ? updatedReflection : r
-          );
-          set({ reflections: updatedReflections });
-          await saveReflections(currentUserId, updatedReflections);
-        } else {
-          // Create new reflection with focus minutes
-          const newReflection = {
-            date: today,
-            good: '',
-            distraction: '',
-            improve: '',
-            focusMinutes: focusMinutes
-          };
-          const updatedReflections = [...get().reflections, newReflection];
-          set({ reflections: updatedReflections });
-          await saveReflections(currentUserId, updatedReflections);
-        }
-      }
-      
-      // Move to next phase in Pomodoro cycle
+      // انتقال به فاز بعدی در چرخه Pomodoro
       const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
       const newCycles = currentTimer.mode === 'work' ? currentTimer.cyclesCompleted + 1 : currentTimer.cyclesCompleted;
       
       if (nextMode === 'work') {
-        // Start new work session
+        // شروع سشن کار جدید
         const newTimerState = createTimerState('work', undefined, newCycles);
         set({ timerState: newTimerState });
         await saveTimerState(currentUserId, newTimerState);
       } else {
-        // Start break session
+        // شروع سشن استراحت
         const newTimerState = createTimerState(nextMode, undefined, newCycles);
         set({ timerState: newTimerState });
         await saveTimerState(currentUserId, newTimerState);
@@ -742,6 +611,9 @@ export const useStore = create<AppStore>((set, get) => {
     // Save to Firestore
     try {
       await saveFocusSessions(currentUserId, updatedSessions);
+      
+      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از اضافه کردن سشن
+      await get()._syncGamification();
     } catch (error) {
       console.error('Error saving manual focus session:', error);
     }
@@ -769,6 +641,9 @@ export const useStore = create<AppStore>((set, get) => {
     // Save to Firestore
     try {
       await saveFocusSessions(currentUserId, updatedSessions);
+      
+      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از ویرایش سشن
+      await get()._syncGamification();
     } catch (error) {
       console.error('Error updating focus session:', error);
     }
@@ -785,8 +660,82 @@ export const useStore = create<AppStore>((set, get) => {
     // Save to Firestore
     try {
       await saveFocusSessions(currentUserId, updatedSessions);
+      
+      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از حذف سشن
+      await get()._syncGamification();
     } catch (error) {
       console.error('Error deleting focus session:', error);
+    }
+  },
+
+  // ✅ تابع کمکی برای نهایی کردن سشن - حذف تکرار کد
+  _finalizeSession: async (session: FocusSession) => {
+    const { currentUserId } = get();
+    if (!currentUserId) return;
+    
+    // اضافه کردن سشن به focusSessions
+    const updatedFocusSessions = [...get().focusSessions, session];
+    set({ focusSessions: updatedFocusSessions });
+    await saveFocusSessions(currentUserId, updatedFocusSessions);
+    
+    // اضافه کردن focus minutes به reflection اگر سشن کار باشد
+    if (session.type === 'work' && session.durationSec > 0) {
+      const focusMinutes = Math.round(session.durationSec / 60);
+      const today = new Date().toISOString().split('T')[0];
+      
+      // دریافت یا ایجاد reflection امروز
+      const todayReflection = get().reflections.find(r => r.date === today);
+      if (todayReflection) {
+        // به‌روزرسانی reflection موجود
+        const updatedReflection = {
+          ...todayReflection,
+          focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+        };
+        const updatedReflections = get().reflections.map(r => 
+          r.date === today ? updatedReflection : r
+        );
+        set({ reflections: updatedReflections });
+        await saveReflections(currentUserId, updatedReflections);
+      } else {
+        // ایجاد reflection جدید با focus minutes
+        const newReflection = {
+          date: today,
+          good: '',
+          distraction: '',
+          improve: '',
+          focusMinutes: focusMinutes
+        };
+        const updatedReflections = [...get().reflections, newReflection];
+        set({ reflections: updatedReflections });
+        await saveReflections(currentUserId, updatedReflections);
+      }
+    }
+    
+    // هماهنگ‌سازی گیمیفیکیشن
+    await get()._syncGamification();
+  },
+
+  // ✅ لایه هماهنگ‌سازی گیمیفیکیشن - به‌روزرسانی خودکار آمار
+  _syncGamification: async () => {
+    const { currentUserId, gamification } = get();
+    if (!currentUserId || !gamification) return;
+    
+    try {
+      // محاسبه مجدد آمار کاربر
+      const updatedUserStats = get().calculateUserStats(currentUserId);
+      
+      // به‌روزرسانی آمار در store
+      const updatedGamification = {
+        ...gamification,
+        userStats: [updatedUserStats], // تبدیل به آرایه
+        lastUpdated: new Date().toISOString()
+      };
+      set({ gamification: updatedGamification });
+      
+      // به‌روزرسانی لیدربورد در سرور
+      await get().updateLeaderboard();
+    } catch (error) {
+      console.error('Error syncing gamification data:', error);
     }
   },
 
@@ -809,17 +758,26 @@ export const useStore = create<AppStore>((set, get) => {
     );
     const totalHours = totalMinutes / 60;
 
-    // Calculate streak
+    // ✅ رفع باگ محاسبه Streak - شروع از دیروز و مدیریت صحیح روز جاری
     let streak = 0;
     const today = new Date();
     
-    for (let i = 0; i < 30; i++) {
+    // تابع کمکی برای محاسبه دقیق تاریخ روزانه (بدون اثرگذاری ساعت)
+    const getDateString = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    // ✅ شروع از دیروز (i=1) نه امروز (i=0)
+    for (let i = 1; i <= 30; i++) {
       const checkDate = new Date();
       checkDate.setDate(today.getDate() - i);
-      const dateStr = checkDate.toISOString().split('T')[0];
+      const dateStr = getDateString(checkDate);
       
       const daySessions = focusSessions.filter(session => {
-        const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+        const sessionDate = getDateString(new Date(session.startTime));
         return sessionDate === dateStr && session.type === 'work';
       });
       
@@ -833,18 +791,35 @@ export const useStore = create<AppStore>((set, get) => {
         break;
       }
     }
+    
+    // ✅ بررسی امروز فقط اگر دیروز تمرکز داشته‌ای
+    if (streak > 0) {
+      const todayStr = getDateString(today);
+      const todaySessions = focusSessions.filter(session => {
+        const sessionDate = getDateString(new Date(session.startTime));
+        return sessionDate === todayStr && session.type === 'work';
+      });
+      
+      const todayMinutes = todaySessions.reduce((total, session) => 
+        total + Math.round(session.durationSec / 60), 0
+      );
+      
+      if (todayMinutes > 0) {
+        streak++;
+      }
+    }
 
-    // Calculate daily stats
+    // ✅ محاسبه dailyStats با استفاده از تابع کمکی
     const dailyStats = [];
     const daysDiff = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     
     for (let i = daysDiff; i >= 0; i--) {
       const date = new Date();
       date.setDate(now.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getDateString(date);
       
       const daySessions = focusSessions.filter(session => {
-        const sessionDate = new Date(session.startTime).toISOString().split('T')[0];
+        const sessionDate = getDateString(new Date(session.startTime));
         return sessionDate === dateStr && session.type === 'work';
       });
       
