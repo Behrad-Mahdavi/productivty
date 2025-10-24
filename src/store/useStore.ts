@@ -253,55 +253,67 @@ export const useStore = create<AppStore>((set, get) => {
   },
   
   // Task actions
-  addTask: async (taskData) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    console.log('Adding task to Firestore:', taskData);
-    const newTask: Task = {
-      ...taskData,
-      id: `task_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    const updatedTasks = [...get().tasks, newTask];
-    set({ tasks: updatedTasks });
-    await saveTasks(currentUserId, updatedTasks);
-    console.log('Task saved to Firestore');
-  },
+  addTask: withAsyncErrorHandling(
+    async (taskData) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      console.log('Adding task to Firestore:', taskData);
+      const newTask: Task = {
+        ...taskData,
+        id: `task_${Date.now()}`,
+        createdAt: new Date().toISOString(),
+      };
+      const updatedTasks = [...get().tasks, newTask];
+      set({ tasks: updatedTasks });
+      await saveTasks(currentUserId, updatedTasks);
+      console.log('Task saved to Firestore');
+    },
+    'تسک با موفقیت اضافه شد'
+  ),
   
-  updateTask: async (id, updates) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedTasks = get().tasks.map(task => 
-      task.id === id ? { ...task, ...updates } : task
-    );
-    set({ tasks: updatedTasks });
-    await saveTasks(currentUserId, updatedTasks);
-  },
+  updateTask: withAsyncErrorHandling(
+    async (id, updates) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedTasks = get().tasks.map(task => 
+        task.id === id ? { ...task, ...updates } : task
+      );
+      set({ tasks: updatedTasks });
+      await saveTasks(currentUserId, updatedTasks);
+    },
+    'تسک با موفقیت به‌روزرسانی شد'
+  ),
   
-  deleteTask: async (id) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedTasks = get().tasks.filter(task => task.id !== id);
-    set({ tasks: updatedTasks });
-    await saveTasks(currentUserId, updatedTasks);
-  },
+  deleteTask: withAsyncErrorHandling(
+    async (id) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedTasks = get().tasks.filter(task => task.id !== id);
+      set({ tasks: updatedTasks });
+      await saveTasks(currentUserId, updatedTasks);
+    },
+    'تسک با موفقیت حذف شد'
+  ),
   
-  toggleTask: async (id) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedTasks = get().tasks.map(task => 
-      task.id === id ? { ...task, done: !task.done } : task
-    );
-    set({ tasks: updatedTasks });
-    await saveTasks(currentUserId, updatedTasks);
-    
-    // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از تغییر تسک
-    await get()._syncGamification();
-  },
+  toggleTask: withAsyncErrorHandling(
+    async (id) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedTasks = get().tasks.map(task => 
+        task.id === id ? { ...task, done: !task.done } : task
+      );
+      set({ tasks: updatedTasks });
+      await saveTasks(currentUserId, updatedTasks);
+      
+      // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از تغییر تسک
+      await get()._syncGamification();
+    },
+    'وضعیت تسک تغییر کرد'
+  ),
   
   // Course actions
   addCourse: withAsyncErrorHandling(
@@ -322,16 +334,19 @@ export const useStore = create<AppStore>((set, get) => {
     'درس با موفقیت اضافه شد'
   ),
   
-  updateCourse: async (id, updates) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedCourses = get().courses.map(course => 
-      course.id === id ? { ...course, ...updates } : course
-    );
-    set({ courses: updatedCourses });
-    await saveCourses(currentUserId, updatedCourses);
-  },
+  updateCourse: withAsyncErrorHandling(
+    async (id, updates) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedCourses = get().courses.map(course => 
+        course.id === id ? { ...course, ...updates } : course
+      );
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'درس با موفقیت به‌روزرسانی شد'
+  ),
   
   deleteCourse: withAsyncErrorHandling(
     async (id) => {
@@ -372,43 +387,49 @@ export const useStore = create<AppStore>((set, get) => {
     'تکلیف با موفقیت اضافه شد'
   ),
 
-  updateAssignment: async (courseId, assignmentId, updates) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedCourses = get().courses.map(course =>
-      course.id === courseId
-        ? {
-            ...course,
-            assignments: course.assignments.map(assignment =>
-              assignment.id === assignmentId
-                ? { ...assignment, ...updates }
-                : assignment
-            )
-          }
-        : course
-    );
-    
-    set({ courses: updatedCourses });
-    await saveCourses(currentUserId, updatedCourses);
-  },
+  updateAssignment: withAsyncErrorHandling(
+    async (courseId, assignmentId, updates) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedCourses = get().courses.map(course =>
+        course.id === courseId
+          ? {
+              ...course,
+              assignments: course.assignments.map(assignment =>
+                assignment.id === assignmentId
+                  ? { ...assignment, ...updates }
+                  : assignment
+              )
+            }
+          : course
+      );
+      
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'تکلیف با موفقیت به‌روزرسانی شد'
+  ),
 
-  deleteAssignment: async (courseId, assignmentId) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedCourses = get().courses.map(course =>
-      course.id === courseId
-        ? {
-            ...course,
-            assignments: course.assignments.filter(assignment => assignment.id !== assignmentId)
-          }
-        : course
-    );
-    
-    set({ courses: updatedCourses });
-    await saveCourses(currentUserId, updatedCourses);
-  },
+  deleteAssignment: withAsyncErrorHandling(
+    async (courseId, assignmentId) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedCourses = get().courses.map(course =>
+        course.id === courseId
+          ? {
+              ...course,
+              assignments: course.assignments.filter(assignment => assignment.id !== assignmentId)
+            }
+          : course
+      );
+      
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'تکلیف با موفقیت حذف شد'
+  ),
 
   // ✅ اکشن جدید برای برنامه‌ریزی فعال - ایجاد تسک‌ها از تکلیف
   createTasksFromAssignment: withAsyncErrorHandling(
@@ -470,39 +491,48 @@ export const useStore = create<AppStore>((set, get) => {
   ),
   
   // Reflection actions
-  addReflection: async (reflection) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedReflections = get().reflections.filter(r => r.date !== reflection.date);
-    updatedReflections.push(reflection);
-    set({ reflections: updatedReflections });
-    await saveReflections(currentUserId, updatedReflections);
-  },
+  addReflection: withAsyncErrorHandling(
+    async (reflection) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedReflections = get().reflections.filter(r => r.date !== reflection.date);
+      updatedReflections.push(reflection);
+      set({ reflections: updatedReflections });
+      await saveReflections(currentUserId, updatedReflections);
+    },
+    'بازتاب با موفقیت ذخیره شد'
+  ),
   
-  updateReflection: async (date, updates) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedReflections = get().reflections.map(reflection => 
-      reflection.date === date ? { ...reflection, ...updates } : reflection
-    );
-    set({ reflections: updatedReflections });
-    await saveReflections(currentUserId, updatedReflections);
-  },
+  updateReflection: withAsyncErrorHandling(
+    async (date, updates) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedReflections = get().reflections.map(reflection => 
+        reflection.date === date ? { ...reflection, ...updates } : reflection
+      );
+      set({ reflections: updatedReflections });
+      await saveReflections(currentUserId, updatedReflections);
+    },
+    'بازتاب با موفقیت به‌روزرسانی شد'
+  ),
   
   getReflection: (date) => {
     return get().reflections.find(r => r.date === date);
   },
   
-  deleteReflection: async (date: string) => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const updatedReflections = get().reflections.filter(r => r.date !== date);
-    set({ reflections: updatedReflections });
-    await saveReflections(currentUserId, updatedReflections);
-  },
+  deleteReflection: withAsyncErrorHandling(
+    async (date: string) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      
+      const updatedReflections = get().reflections.filter(r => r.date !== date);
+      set({ reflections: updatedReflections });
+      await saveReflections(currentUserId, updatedReflections);
+    },
+    'بازتاب با موفقیت حذف شد'
+  ),
   
   // Timer actions
   startTimer: async (mode: 'work' | 'shortBreak' | 'longBreak', taskId?: string) => {
@@ -618,33 +648,36 @@ export const useStore = create<AppStore>((set, get) => {
     }
   },
   
-  moveToNextPhase: async () => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const currentTimer = get().timerState;
-    if (currentTimer) {
-      // ✅ نهایی کردن سشن فعلی
-      const session = completeSession(currentTimer);
-      await get()._finalizeSession(session);
+  moveToNextPhase: withAsyncErrorHandling(
+    async () => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
       
-      // انتقال به فاز بعدی در چرخه Pomodoro
-      const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
-      const newCycles = currentTimer.mode === 'work' ? currentTimer.cyclesCompleted + 1 : currentTimer.cyclesCompleted;
-      
-      if (nextMode === 'work') {
-        // شروع سشن کار جدید
-        const newTimerState = createTimerState('work', undefined, newCycles);
-        set({ timerState: newTimerState });
-        await saveTimerState(currentUserId, newTimerState);
-      } else {
-        // شروع سشن استراحت
-        const newTimerState = createTimerState(nextMode, undefined, newCycles);
-        set({ timerState: newTimerState });
-        await saveTimerState(currentUserId, newTimerState);
+      const currentTimer = get().timerState;
+      if (currentTimer) {
+        // ✅ نهایی کردن سشن فعلی
+        const session = completeSession(currentTimer);
+        await get()._finalizeSession(session);
+        
+        // انتقال به فاز بعدی در چرخه Pomodoro
+        const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
+        const newCycles = currentTimer.mode === 'work' ? currentTimer.cyclesCompleted + 1 : currentTimer.cyclesCompleted;
+        
+        if (nextMode === 'work') {
+          // شروع سشن کار جدید
+          const newTimerState = createTimerState('work', undefined, newCycles);
+          set({ timerState: newTimerState });
+          await saveTimerState(currentUserId, newTimerState);
+        } else {
+          // شروع سشن استراحت
+          const newTimerState = createTimerState(nextMode, undefined, newCycles);
+          set({ timerState: newTimerState });
+          await saveTimerState(currentUserId, newTimerState);
+        }
       }
-    }
-  },
+    },
+    'فاز تایمر تغییر کرد'
+  ),
   
   // Computed values
   getTodayTasks: () => {
