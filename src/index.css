@@ -584,6 +584,14 @@ h1, h2, h3, h4, h5, h6 {
 .heatmap-row {
   display: flex;
   gap: 2px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.day-label {
+  min-width: 80px;
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 .heatmap-cell:hover {
