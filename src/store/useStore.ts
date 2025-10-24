@@ -610,13 +610,22 @@ export const useStore = create<AppStore>((set, get) => {
     if (!currentUserId) return;
     
     const currentTimer = get().timerState;
-    if (currentTimer) {
-      // ✅ فقط اگر تایمر واقعاً در حال اجرا بوده و مدت زمان معناداری داشته
-      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec && currentTimer.remainingSec > 0) {
+    if (currentTimer && currentTimer.mode === 'work') { // ✅ فقط سشن‌های کاری را ذخیره کن
+      
+      const elapsedTimeSec = currentTimer.durationSec - currentTimer.remainingSec;
+      
+      // ✅ شرط ضدگلوله: فقط زمانی ذخیره کن که تایمر در حالت کار بوده و بیش از یک دقیقه کار شده باشد
+      if (elapsedTimeSec >= 60) { // اگر حداقل 60 ثانیه کار شده
         const session = completeSession(currentTimer);
         await get()._finalizeSession(session);
       }
       
+      // در هر صورت، تایمر را متوقف کن
+      set({ timerState: null });
+      await saveTimerState(currentUserId, null);
+    } 
+    // ✅ اگر حالت استراحت بود (یا سشن کاری نبود)، فقط تایمر را متوقف کن و ذخیره نکن
+    else if (currentTimer) {
       set({ timerState: null });
       await saveTimerState(currentUserId, null);
     }
@@ -628,10 +637,15 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // ✅ فقط اگر تایمر واقعاً در حال اجرا بوده و مدت زمان معناداری داشته
-      if (!currentTimer.isPaused && currentTimer.remainingSec < currentTimer.durationSec && currentTimer.remainingSec > 0) {
-        const session = completeSession(currentTimer);
-        await get()._finalizeSession(session);
+      // ✅ اصلاح منطق: استفاده از elapsed time به جای remaining time
+      if (currentTimer.mode === 'work') {
+        const elapsedTimeSec = currentTimer.durationSec - currentTimer.remainingSec;
+        
+        // ✅ فقط اگر حداقل 60 ثانیه کار شده باشد، سشن را ذخیره کن
+        if (elapsedTimeSec >= 60) {
+          const session = completeSession(currentTimer);
+          await get()._finalizeSession(session);
+        }
       }
       
       const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
