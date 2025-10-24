@@ -755,9 +755,9 @@ export const useStore = create<AppStore>((set, get) => {
         type: 'work' as const
       };
       
-      const updatedSessions = [...get().focusSessions, session];
-      set({ focusSessions: updatedSessions });
-      await saveFocusSessions(currentUserId, updatedSessions);
+      // ✅ اعتماد به Real-time Sync - حذف به‌روزرسانی محلی
+      const sessionsToSave = [...get().focusSessions, session];
+      await saveFocusSessions(currentUserId, sessionsToSave);
       
       // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از اضافه کردن سشن
       await get()._syncGamification();
@@ -782,9 +782,9 @@ export const useStore = create<AppStore>((set, get) => {
         endTime: new Date(new Date(session.startTime).getTime() + minutes * 60 * 1000).toISOString()
       };
       
+      // ✅ اعتماد به Real-time Sync - حذف به‌روزرسانی محلی
       const updatedSessions = [...sessions];
       updatedSessions[sessionIndex] = updatedSession;
-      set({ focusSessions: updatedSessions });
       await saveFocusSessions(currentUserId, updatedSessions);
       
       // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از ویرایش سشن
@@ -802,8 +802,8 @@ export const useStore = create<AppStore>((set, get) => {
       const sessionExists = sessions.some(s => s.id === sessionId);
       if (!sessionExists) throw new Error('سشن مورد نظر یافت نشد');
       
+      // ✅ اعتماد به Real-time Sync - حذف به‌روزرسانی محلی
       const updatedSessions = sessions.filter(s => s.id !== sessionId);
-      set({ focusSessions: updatedSessions });
       await saveFocusSessions(currentUserId, updatedSessions);
       
       // ✅ هماهنگ‌سازی گیمیفیکیشن بعد از حذف سشن
@@ -817,10 +817,12 @@ export const useStore = create<AppStore>((set, get) => {
     const { currentUserId } = get();
     if (!currentUserId) return;
     
-    // اضافه کردن سشن به focusSessions
-    const updatedFocusSessions = [...get().focusSessions, session];
-    set({ focusSessions: updatedFocusSessions });
-    await saveFocusSessions(currentUserId, updatedFocusSessions);
+    // ✅ گام اول: سشن جدید را فقط به لیست فعلی اضافه کن
+    //    و آماده‌ی ذخیره باش (نیازی به set کردن محلی نیست)
+    const sessionsToSave = [...get().focusSessions, session];
+    
+    // ✅ گام دوم: ذخیره در Firestore و منتظر Listener باش
+    await saveFocusSessions(currentUserId, sessionsToSave);
     
     // اضافه کردن focus minutes به reflection اگر سشن کار باشد
     if (session.type === 'work' && session.durationSec > 0) {
@@ -855,7 +857,7 @@ export const useStore = create<AppStore>((set, get) => {
       }
     }
     
-    // هماهنگ‌سازی گیمیفیکیشن
+    // ✅ _syncGamification باید بعد از ذخیره موفق فراخوانی شود
     await get()._syncGamification();
   },
 
