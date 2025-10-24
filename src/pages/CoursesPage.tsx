@@ -5,8 +5,14 @@ import { DateDisplay } from '../components/DateDisplay';
 import { PersianDatePicker } from '../components/PersianDatePicker';
 import { formatPersianDate } from '../utils/dateUtils';
 
-export const CoursesPage: React.FC = () => {
-  const { courses, addCourse, deleteCourse, addAssignment, updateAssignment, createTasksFromAssignment } = useStore();
+export const CoursesPage: React.FC = React.memo(() => {
+  // ✅ بهینه‌سازی Selectors - فقط داده‌های مورد نیاز
+  const courses = useStore(state => state.courses);
+  const addCourse = useStore(state => state.addCourse);
+  const deleteCourse = useStore(state => state.deleteCourse);
+  const addAssignment = useStore(state => state.addAssignment);
+  const updateAssignment = useStore(state => state.updateAssignment);
+  const createTasksFromAssignment = useStore(state => state.createTasksFromAssignment);
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const [showTaskPlanningForm, setShowTaskPlanningForm] = useState(false);
@@ -742,4 +748,4 @@ export const CoursesPage: React.FC = () => {
       )}
     </div>
   );
-};
+});

@@ -6,8 +6,10 @@ import { TaskForm } from '../components/TaskForm';
 import { DateDisplay } from '../components/DateDisplay';
 import { PersianDatePicker } from '../components/PersianDatePicker';
 
-export const TasksPage: React.FC = () => {
-  const { tasks, startTimer } = useStore();
+export const TasksPage: React.FC = React.memo(() => {
+  // ✅ بهینه‌سازی Selectors - فقط داده‌های مورد نیاز
+  const tasks = useStore(state => state.tasks);
+  const startTimer = useStore(state => state.startTimer);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [categoryFilter, setCategoryFilter] = useState<'همه' | 'دانشگاه' | 'پروژه' | 'شخصی'>('همه');
@@ -166,4 +168,4 @@ export const TasksPage: React.FC = () => {
       )}
     </div>
   );
-};
+});

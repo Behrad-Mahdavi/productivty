@@ -7,15 +7,14 @@ import { FocusTimer } from '../components/FocusTimer';
 import { ReflectionForm } from '../components/ReflectionForm';
 import { DateDisplay } from '../components/DateDisplay';
 
-export const Dashboard: React.FC = () => {
-  const { 
-    getTodayTasks, 
-    getOverdueTasks,
-    getTodayProgress, 
-    getFocusMinutesToday, 
-    getOverdueAssignments,
-    startTimer 
-  } = useStore();
+export const Dashboard: React.FC = React.memo(() => {
+  // ✅ بهینه‌سازی Selectors - فقط داده‌های مورد نیاز
+  const getTodayTasks = useStore(state => state.getTodayTasks);
+  const getOverdueTasks = useStore(state => state.getOverdueTasks);
+  const getTodayProgress = useStore(state => state.getTodayProgress);
+  const getFocusMinutesToday = useStore(state => state.getFocusMinutesToday);
+  const getOverdueAssignments = useStore(state => state.getOverdueAssignments);
+  const startTimer = useStore(state => state.startTimer);
   
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showReflectionForm, setShowReflectionForm] = useState(false);
@@ -232,4 +231,4 @@ export const Dashboard: React.FC = () => {
       )}
     </div>
   );
-};
+});

@@ -12,8 +12,12 @@ import {
 import { useStore } from '../store/useStore';
 import { formatPersianDate, getPersianDayName } from '../utils/dateUtils';
 
-export const StatsPage: React.FC = () => {
-  const { tasks, reflections, focusSessions, updateReflection } = useStore();
+export const StatsPage: React.FC = React.memo(() => {
+  // ✅ بهینه‌سازی Selectors - فقط داده‌های مورد نیاز
+  const tasks = useStore(state => state.tasks);
+  const reflections = useStore(state => state.reflections);
+  const focusSessions = useStore(state => state.focusSessions);
+  const updateReflection = useStore(state => state.updateReflection);
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [todayNote, setTodayNote] = useState('');
   const [todayRating, setTodayRating] = useState(0);
@@ -591,4 +595,4 @@ export const StatsPage: React.FC = () => {
 
     </div>
   );
-};
+});

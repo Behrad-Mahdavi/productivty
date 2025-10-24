@@ -4,13 +4,13 @@ import {
   getDocs, 
   getDoc, 
   setDoc, 
-  updateDoc, 
   deleteDoc,
   query,
   where,
   onSnapshot,
   type Unsubscribe
 } from 'firebase/firestore';
+import { debounce } from 'lodash';
 import { db } from '../config/firebase';
 import type { Task, Course, Reflection, FocusSession, TimerState, AppData, TimerSettings } from '../types';
 
@@ -22,6 +22,43 @@ const COLLECTIONS = {
   FOCUS_SESSIONS: 'focusSessions',
   TIMER_STATE: 'timerState'
 };
+
+// ✅ Debounced save functions برای بهینه‌سازی عملکرد
+const saveTasksDebounced = debounce(async (userId: string, tasks: Task[]) => {
+  try {
+    await setDoc(doc(db, COLLECTIONS.TASKS, userId), { tasks });
+    console.log('Tasks saved to Firestore (debounced)');
+  } catch (error) {
+    console.error('Error saving tasks:', error);
+  }
+}, 300);
+
+const saveCoursesDebounced = debounce(async (userId: string, courses: Course[]) => {
+  try {
+    await setDoc(doc(db, COLLECTIONS.COURSES, userId), { courses });
+    console.log('Courses saved to Firestore (debounced)');
+  } catch (error) {
+    console.error('Error saving courses:', error);
+  }
+}, 300);
+
+const saveReflectionsDebounced = debounce(async (userId: string, reflections: Reflection[]) => {
+  try {
+    await setDoc(doc(db, COLLECTIONS.REFLECTIONS, userId), { reflections });
+    console.log('Reflections saved to Firestore (debounced)');
+  } catch (error) {
+    console.error('Error saving reflections:', error);
+  }
+}, 300);
+
+const saveFocusSessionsDebounced = debounce(async (userId: string, focusSessions: FocusSession[]) => {
+  try {
+    await setDoc(doc(db, COLLECTIONS.FOCUS_SESSIONS, userId), { focusSessions });
+    console.log('Focus sessions saved to Firestore (debounced)');
+  } catch (error) {
+    console.error('Error saving focus sessions:', error);
+  }
+}, 300);
 
 // Load all data for a user from Firestore
 export const loadData = async (userId: string): Promise<AppData> => {
@@ -167,160 +204,26 @@ export const saveData = async (userId: string, data: AppData): Promise<void> => 
 
 // Save tasks to Firestore
 export const saveTasks = async (userId: string, tasks: Task[]): Promise<void> => {
-  try {
-    // Get existing tasks
-    const tasksSnapshot = await getDocs(query(collection(db, COLLECTIONS.TASKS), where('userId', '==', userId)));
-    const existingTasks = new Map();
-    tasksSnapshot.forEach((doc) => {
-      existingTasks.set(doc.id, doc);
-    });
-
-    // Update or create tasks
-    for (const task of tasks) {
-      const taskData = {
-        userId,
-        title: task.title,
-        category: task.category,
-        date: task.date,
-        done: task.done,
-        createdAt: task.createdAt
-      };
-
-      if (existingTasks.has(task.id)) {
-        await updateDoc(doc(db, COLLECTIONS.TASKS, task.id), taskData);
-      } else {
-        await setDoc(doc(db, COLLECTIONS.TASKS, task.id), taskData);
-      }
-    }
-
-    // Delete removed tasks
-    const currentTaskIds = new Set(tasks.map(t => t.id));
-    for (const [taskId, taskDoc] of existingTasks) {
-      if (!currentTaskIds.has(taskId)) {
-        await deleteDoc(taskDoc.ref);
-      }
-    }
-  } catch (error) {
-    console.error('Error saving tasks to Firestore:', error);
-  }
+  // ✅ استفاده از debounced function برای بهینه‌سازی عملکرد
+  saveTasksDebounced(userId, tasks);
 };
 
 // Save courses to Firestore
 export const saveCourses = async (userId: string, courses: Course[]): Promise<void> => {
-  try {
-    const coursesSnapshot = await getDocs(query(collection(db, COLLECTIONS.COURSES), where('userId', '==', userId)));
-    const existingCourses = new Map();
-    coursesSnapshot.forEach((doc) => {
-      existingCourses.set(doc.id, doc);
-    });
-
-    for (const course of courses) {
-      const courseData = {
-        userId,
-        name: course.name,
-        code: course.code,
-        instructor: course.instructor,
-        assignments: course.assignments
-      };
-
-      if (existingCourses.has(course.id)) {
-        await updateDoc(doc(db, COLLECTIONS.COURSES, course.id), courseData);
-      } else {
-        await setDoc(doc(db, COLLECTIONS.COURSES, course.id), courseData);
-      }
-    }
-
-    const currentCourseIds = new Set(courses.map(c => c.id));
-    for (const [courseId, courseDoc] of existingCourses) {
-      if (!currentCourseIds.has(courseId)) {
-        await deleteDoc(courseDoc.ref);
-      }
-    }
-  } catch (error) {
-    console.error('Error saving courses to Firestore:', error);
-  }
+  // ✅ استفاده از debounced function برای بهینه‌سازی عملکرد
+  saveCoursesDebounced(userId, courses);
 };
 
 // Save reflections to Firestore
 export const saveReflections = async (userId: string, reflections: Reflection[]): Promise<void> => {
-  try {
-    const reflectionsSnapshot = await getDocs(query(collection(db, COLLECTIONS.REFLECTIONS), where('userId', '==', userId)));
-    const existingReflections = new Map();
-    reflectionsSnapshot.forEach((doc) => {
-      existingReflections.set(doc.id, doc);
-    });
-
-    for (const reflection of reflections) {
-      const reflectionData = {
-        userId,
-        date: reflection.date,
-        good: reflection.good,
-        distraction: reflection.distraction,
-        improve: reflection.improve,
-        focusMinutes: reflection.focusMinutes
-      };
-
-      // Find existing reflection by date
-      const existingReflection = Array.from(existingReflections.values()).find(doc => doc.data().date === reflection.date);
-      if (existingReflection) {
-        await updateDoc(existingReflection.ref, reflectionData);
-      } else {
-        await setDoc(doc(db, COLLECTIONS.REFLECTIONS, `reflection_${Date.now()}`), reflectionData);
-      }
-    }
-
-    // Delete removed reflections
-    const currentReflectionDates = new Set(reflections.map(r => r.date));
-    for (const [, reflectionDoc] of existingReflections) {
-      if (!currentReflectionDates.has(reflectionDoc.data().date)) {
-        await deleteDoc(reflectionDoc.ref);
-      }
-    }
-  } catch (error) {
-    console.error('Error saving reflections to Firestore:', error);
-  }
+  // ✅ استفاده از debounced function برای بهینه‌سازی عملکرد
+  saveReflectionsDebounced(userId, reflections);
 };
 
 // Save focus sessions to Firestore
 export const saveFocusSessions = async (userId: string, focusSessions: FocusSession[]): Promise<void> => {
-  try {
-    const sessionsSnapshot = await getDocs(query(collection(db, COLLECTIONS.FOCUS_SESSIONS), where('userId', '==', userId)));
-    const existingSessions = new Map();
-    sessionsSnapshot.forEach((doc) => {
-      existingSessions.set(doc.id, doc);
-    });
-
-    for (const session of focusSessions) {
-      const sessionData: any = {
-        userId,
-        startTime: session.startTime,
-        endTime: session.endTime,
-        durationSec: session.durationSec,
-        completed: session.completed,
-        type: session.type
-      };
-      
-      // Only add taskId if it exists
-      if (session.taskId) {
-        sessionData.taskId = session.taskId;
-      }
-
-      if (existingSessions.has(session.id)) {
-        await updateDoc(doc(db, COLLECTIONS.FOCUS_SESSIONS, session.id), sessionData);
-      } else {
-        await setDoc(doc(db, COLLECTIONS.FOCUS_SESSIONS, session.id), sessionData);
-      }
-    }
-
-    const currentSessionIds = new Set(focusSessions.map(s => s.id));
-    for (const [sessionId, sessionDoc] of existingSessions) {
-      if (!currentSessionIds.has(sessionId)) {
-        await deleteDoc(sessionDoc.ref);
-      }
-    }
-  } catch (error) {
-    console.error('Error saving focus sessions to Firestore:', error);
-  }
+  // ✅ استفاده از debounced function برای بهینه‌سازی عملکرد
+  saveFocusSessionsDebounced(userId, focusSessions);
 };
 
 // Save timer state to Firestore
