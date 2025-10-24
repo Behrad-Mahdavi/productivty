@@ -63,6 +63,7 @@ interface AppStore {
   resumeTimer: () => Promise<void>;
   stopTimer: () => Promise<void>;
   skipTimer: () => Promise<void>;
+  moveToNextPhase: () => Promise<void>;
   
   // Computed values
   getTodayTasks: () => Task[];
@@ -589,6 +590,71 @@ export const useStore = create<AppStore>((set, get) => {
       } else {
         set({ timerState: null });
         await saveTimerState(currentUserId, null);
+      }
+    }
+  },
+  
+  moveToNextPhase: async () => {
+    const { currentUserId } = get();
+    if (!currentUserId) return;
+    
+    const currentTimer = get().timerState;
+    if (currentTimer) {
+      // Complete the current session
+      const session = completeSession(currentTimer);
+      
+      // Add session to focusSessions
+      const updatedFocusSessions = [...get().focusSessions, session];
+      set({ focusSessions: updatedFocusSessions });
+      await saveFocusSessions(currentUserId, updatedFocusSessions);
+      
+      // Add focus minutes to today's reflection if it's a work session
+      if (currentTimer.mode === 'work' && session.durationSec > 0) {
+        const focusMinutes = Math.round(session.durationSec / 60);
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get or create today's reflection
+        const todayReflection = get().reflections.find(r => r.date === today);
+        if (todayReflection) {
+          // Update existing reflection
+          const updatedReflection = {
+            ...todayReflection,
+            focusMinutes: (todayReflection.focusMinutes || 0) + focusMinutes
+          };
+          const updatedReflections = get().reflections.map(r => 
+            r.date === today ? updatedReflection : r
+          );
+          set({ reflections: updatedReflections });
+          await saveReflections(currentUserId, updatedReflections);
+        } else {
+          // Create new reflection with focus minutes
+          const newReflection = {
+            date: today,
+            good: '',
+            distraction: '',
+            improve: '',
+            focusMinutes: focusMinutes
+          };
+          const updatedReflections = [...get().reflections, newReflection];
+          set({ reflections: updatedReflections });
+          await saveReflections(currentUserId, updatedReflections);
+        }
+      }
+      
+      // Move to next phase in Pomodoro cycle
+      const nextMode = getNextMode(currentTimer.mode as 'work' | 'shortBreak' | 'longBreak', currentTimer.cyclesCompleted);
+      const newCycles = currentTimer.mode === 'work' ? currentTimer.cyclesCompleted + 1 : currentTimer.cyclesCompleted;
+      
+      if (nextMode === 'work') {
+        // Start new work session
+        const newTimerState = createTimerState('work', undefined, newCycles);
+        set({ timerState: newTimerState });
+        await saveTimerState(currentUserId, newTimerState);
+      } else {
+        // Start break session
+        const newTimerState = createTimerState(nextMode, undefined, newCycles);
+        set({ timerState: newTimerState });
+        await saveTimerState(currentUserId, newTimerState);
       }
     }
   },

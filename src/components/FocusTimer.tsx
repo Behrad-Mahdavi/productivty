@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Pause, Square, SkipForward, Loader2 } from 'lucide-react';
+import { Play, Pause, Square, SkipForward, Loader2 } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
 import { formatTime, getRemainingTime, getTimerProgress, isTimerComplete } from '../utils/timer';
 import { TimerSettings } from './TimerSettings';
@@ -9,9 +9,11 @@ const TIMER_MODES = {
   WORK: 'work',
   SHORT_BREAK: 'shortBreak',
   LONG_BREAK: 'longBreak',
-};
+} as const;
 
 export const FocusTimer: React.FC = () => {
+  // *** ✅ اصلاح: حذف completeCurrentTimer از انتخابگر که باعث ارور می‌شد ***
+  // ✅ اضافه کردن focusMinutesToday به انتخابگر برای رفع باگ رندرینگ آمار
   const { 
     timerState, 
     startTimer, 
@@ -19,8 +21,18 @@ export const FocusTimer: React.FC = () => {
     resumeTimer, 
     stopTimer, 
     skipTimer,
-    getFocusMinutesToday
-  } = useStore();
+    moveToNextPhase,
+    focusMinutesToday,    
+  } = useStore(state => ({
+    timerState: state.timerState,
+    startTimer: state.startTimer,
+    pauseTimer: state.pauseTimer,
+    resumeTimer: state.resumeTimer,
+    stopTimer: state.stopTimer,
+    skipTimer: state.skipTimer,
+    moveToNextPhase: state.moveToNextPhase,
+    focusMinutesToday: state.getFocusMinutesToday(), // فراخوانی تابع در انتخابگر
+  }));
 
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -41,32 +53,26 @@ export const FocusTimer: React.FC = () => {
     setTimeLeft(remaining);
     setProgress(timerProgress);
 
-    // منطق حیاتی: انتقال خودکار به فاز بعدی (رفع باگ شروع نشدن مجدد پس از صفر شدن)
+    // ✅ اصلاح ساختاری: استفاده از moveToNextPhase برای انتقال خودکار به فاز بعدی
     if (isTimerComplete(timerState)) {
       if (remaining <= 0) { 
-        // در این نقطه، تایمر به صفر رسیده. فراخوانی تابع انتقال حالت در استور.
-        stopTimer(); 
+        moveToNextPhase(); // انتقال خودکار به فاز بعدی (تمرکز → استراحت → تمرکز)
       }
       return;
     }
-  }, [timerState, stopTimer]);
+  }, [timerState, moveToNextPhase]); // ✅ وابستگی به moveToNextPhase برای انتقال فاز
 
   useEffect(() => {
     updateTimer();
-
     const interval = setInterval(updateTimer, 1000);
-
-    // ✅ وابستگی بهینه شده به تابع useCallback و اکشن استور
     return () => clearInterval(interval);
   }, [updateTimer]); 
 
-  // --- Handlers (مدیریت isProcessing به صورت موقت) ---
-  // توجه: مدیریت isProcessing باید در توابع استور به صورت Async باشد تا محکم شود.
-  // در اینجا از setTimeout به عنوان یک راه‌حل موقت استفاده می‌کنیم.
+  // --- Handlers ---
 
   const handleStart = () => {
     setIsProcessing(true);
-    startTimer('work');
+    startTimer(TIMER_MODES.WORK); 
     setTimeout(() => setIsProcessing(false), 50); 
   };
 
@@ -81,14 +87,12 @@ export const FocusTimer: React.FC = () => {
   };
 
   const handleStop = () => {
-    // ✅ رفع باگ ۱ (اضافه نشدن زمان تمرکز): این اکشن باید اکنون در استور زمان صرف شده را ثبت کند
     setIsProcessing(true);
     stopTimer();
     setTimeout(() => setIsProcessing(false), 50);
   };
 
   const handleSkip = () => {
-    // ✅ رفع باگ ۳ (رد کردن فاز): این اکشن باید اکنون در استور به فاز بعدی منتقل شود
     setIsProcessing(true);
     skipTimer();
     setTimeout(() => setIsProcessing(false), 50);
@@ -107,7 +111,6 @@ export const FocusTimer: React.FC = () => {
   };
 
   const getModeClass = () => {
-    // ✅ رفع ضعف ساختاری: برگرداندن کلاس مشخص برای حالت آماده
     if (!timerState) return 'timer-ready'; 
     switch (timerState.mode) {
       case TIMER_MODES.WORK: return 'timer-work-mode';
@@ -195,17 +198,15 @@ export const FocusTimer: React.FC = () => {
         </div>
 
         {/* Timer info */}
-        {/* ✅ رفع باگ رندرینگ آمار: نمایش چرخه‌ها و زمان کل تمرکز بدون وابستگی به timerState */}
         <div className="mt-4 pt-3 border-top text-muted small">
             <div>چرخه‌های پومودوروی تکمیل شده: 
                 <span className="fw-bold">
-                    {/* نمایش چرخه‌های تکمیل شده از حالت فعلی (اگر تایمر فعال است) یا صفر */}
                     {timerState?.cyclesCompleted || 0}
                 </span>
             </div> 
             
-            {/* ✅ استفاده مستقیم از getFocusMinutesToday که به درستی از استور انتخاب شده است */}
-            <div>زمان کل تمرکز: <span className="fw-bold">{formatTime((getFocusMinutesToday() || 0) * 60)}</span></div> 
+            {/* استفاده از متغیر focusMinutesToday */}
+            <div>زمان کل تمرکز: <span className="fw-bold">{formatTime((focusMinutesToday || 0) * 60)}</span></div> 
             
             {timerState?.taskId && (
               <div className="text-success fw-bold mt-1">متصل به کار شماره {timerState.taskId}</div>
