@@ -6,16 +6,28 @@ import { PersianDatePicker } from '../components/PersianDatePicker';
 import { formatPersianDate } from '../utils/dateUtils';
 
 export const CoursesPage: React.FC = () => {
-  const { courses, addCourse, deleteCourse, addAssignment, updateAssignment } = useStore();
+  const { courses, addCourse, deleteCourse, addAssignment, updateAssignment, createTasksFromAssignment } = useStore();
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [showTaskPlanningForm, setShowTaskPlanningForm] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [newCourse, setNewCourse] = useState({ name: '', code: '', instructor: '' });
   const [newAssignment, setNewAssignment] = useState({ 
     title: '', 
     description: '', 
     dueDate: new Date().toISOString().split('T')[0],
-    courseId: ''
+    courseId: '',
+    // ✅ فیلدهای جدید برای برنامه‌ریزی فعال
+    estimatedHours: 0,
+    linkedTaskIds: []
+  });
+  
+  // ✅ state برای فرم برنامه‌ریزی تسک
+  const [taskPlanning, setTaskPlanning] = useState({
+    courseId: '',
+    assignmentId: '',
+    taskCount: 3,
+    minutesPerTask: 60
   });
 
   const handleAddCourse = (e: React.FormEvent) => {
@@ -39,15 +51,39 @@ export const CoursesPage: React.FC = () => {
         title: newAssignment.title.trim(),
         description: newAssignment.description.trim(),
         dueDate: newAssignment.dueDate,
-        done: false
+        done: false,
+        estimatedHours: newAssignment.estimatedHours,
+        linkedTaskIds: newAssignment.linkedTaskIds
       });
       setNewAssignment({ 
         title: '', 
         description: '', 
         dueDate: new Date().toISOString().split('T')[0],
-        courseId: ''
+        courseId: '',
+        estimatedHours: 0,
+        linkedTaskIds: []
       });
       setShowAssignmentForm(false);
+    }
+  };
+
+  // ✅ handler برای ایجاد تسک‌های برنامه‌ریزی
+  const handleCreateTasks = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (taskPlanning.courseId && taskPlanning.assignmentId) {
+      createTasksFromAssignment(
+        taskPlanning.courseId,
+        taskPlanning.assignmentId,
+        taskPlanning.taskCount,
+        taskPlanning.minutesPerTask
+      );
+      setTaskPlanning({
+        courseId: '',
+        assignmentId: '',
+        taskCount: 3,
+        minutesPerTask: 60
+      });
+      setShowTaskPlanningForm(false);
     }
   };
 
@@ -296,6 +332,19 @@ export const CoursesPage: React.FC = () => {
                               </li>
                               <li>
                                 <button
+                                  className="dropdown-item"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setTaskPlanning(prev => ({ ...prev, courseId: course.id }));
+                                    setShowTaskPlanningForm(true);
+                                    setOpenDropdown(null);
+                                  }}
+                                >
+                                  برنامه‌ریزی تسک
+                                </button>
+                              </li>
+                              <li>
+                                <button
                                   className="dropdown-item text-danger"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -353,6 +402,20 @@ export const CoursesPage: React.FC = () => {
                               {assignment.description && (
                                 <div className="ms-4">
                                   <small className="text-muted">{assignment.description}</small>
+                                </div>
+                              )}
+                              {assignment.estimatedHours > 0 && (
+                                <div className="ms-4">
+                                  <small className="text-info">
+                                    ⏱️ {assignment.estimatedHours} ساعت تخمینی
+                                  </small>
+                                </div>
+                              )}
+                              {assignment.linkedTaskIds.length > 0 && (
+                                <div className="ms-4">
+                                  <small className="text-success">
+                                    ✅ {assignment.linkedTaskIds.length} تسک برنامه‌ریزی شده
+                                  </small>
                                 </div>
                               )}
                             </div>
@@ -519,6 +582,22 @@ export const CoursesPage: React.FC = () => {
                       label="تاریخ تحویل"
                     />
                   </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">ساعت کار تخمینی</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={newAssignment.estimatedHours}
+                      onChange={(e) => setNewAssignment(prev => ({ ...prev, estimatedHours: parseInt(e.target.value) || 0 }))}
+                      placeholder="مثال: 5"
+                      min="0"
+                      step="0.5"
+                    />
+                    <div className="form-text">
+                      <small>تخمین تعداد ساعت کار مورد نیاز برای اتمام این تکلیف</small>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="modal-footer">
@@ -544,6 +623,113 @@ export const CoursesPage: React.FC = () => {
                   >
                     <Plus size={16} className="me-1" />
                     افزودن تکلیف
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ مودال برنامه‌ریزی تسک */}
+      {showTaskPlanningForm && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">برنامه‌ریزی تسک‌ها</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowTaskPlanningForm(false)}
+                ></button>
+              </div>
+              
+              <form onSubmit={handleCreateTasks}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">درس</label>
+                    <select
+                      className="form-select"
+                      value={taskPlanning.courseId}
+                      onChange={(e) => setTaskPlanning(prev => ({ ...prev, courseId: e.target.value }))}
+                      required
+                    >
+                      <option value="">انتخاب کنید...</option>
+                      {courses.map(course => (
+                        <option key={course.id} value={course.id}>
+                          {course.name} ({course.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">تکلیف</label>
+                    <select
+                      className="form-select"
+                      value={taskPlanning.assignmentId}
+                      onChange={(e) => setTaskPlanning(prev => ({ ...prev, assignmentId: e.target.value }))}
+                      required
+                      disabled={!taskPlanning.courseId}
+                    >
+                      <option value="">ابتدا درس را انتخاب کنید</option>
+                      {taskPlanning.courseId && courses.find(c => c.id === taskPlanning.courseId)?.assignments.map(assignment => (
+                        <option key={assignment.id} value={assignment.id}>
+                          {assignment.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">تعداد تسک‌ها</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={taskPlanning.taskCount}
+                      onChange={(e) => setTaskPlanning(prev => ({ ...prev, taskCount: parseInt(e.target.value) || 1 }))}
+                      min="1"
+                      max="20"
+                      required
+                    />
+                    <div className="form-text">
+                      <small>تکلیف به چند بخش تقسیم شود؟</small>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">مدت زمان هر تسک (دقیقه)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={taskPlanning.minutesPerTask}
+                      onChange={(e) => setTaskPlanning(prev => ({ ...prev, minutesPerTask: parseInt(e.target.value) || 30 }))}
+                      min="15"
+                      max="240"
+                      step="15"
+                      required
+                    />
+                    <div className="form-text">
+                      <small>هر تسک چقدر زمان نیاز دارد؟</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowTaskPlanningForm(false)}
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                  >
+                    <Plus size={16} className="me-1" />
+                    ایجاد تسک‌های برنامه‌ریزی
                   </button>
                 </div>
               </form>

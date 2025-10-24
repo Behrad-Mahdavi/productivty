@@ -57,6 +57,9 @@ interface AppStore {
   updateAssignment: (courseId: string, assignmentId: string, updates: Partial<Assignment>) => Promise<void>;
   deleteAssignment: (courseId: string, assignmentId: string) => Promise<void>;
   
+  // ✅ اکشن جدید برای برنامه‌ریزی فعال
+  createTasksFromAssignment: (courseId: string, assignmentId: string, taskCount: number, minutesPerTask: number) => Promise<void>;
+  
   addReflection: (reflection: Reflection) => Promise<void>;
   updateReflection: (date: string, updates: Partial<Reflection>) => Promise<void>;
   getReflection: (date: string) => Reflection | undefined;
@@ -344,6 +347,9 @@ export const useStore = create<AppStore>((set, get) => {
         ...assignmentData,
         id: `assignment_${Date.now()}`,
         courseId,
+        // ✅ مقادیر پیش‌فرض برای فیلدهای جدید
+        estimatedHours: assignmentData.estimatedHours || 0,
+        linkedTaskIds: assignmentData.linkedTaskIds || []
       };
       
       const updatedCourses = get().courses.map(course =>
@@ -395,6 +401,65 @@ export const useStore = create<AppStore>((set, get) => {
     set({ courses: updatedCourses });
     await saveCourses(currentUserId, updatedCourses);
   },
+
+  // ✅ اکشن جدید برای برنامه‌ریزی فعال - ایجاد تسک‌ها از تکلیف
+  createTasksFromAssignment: withAsyncErrorHandling(
+    async (courseId: string, assignmentId: string, taskCount: number, minutesPerTask: number) => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
+      if (taskCount <= 0) throw new Error('تعداد تسک‌ها باید بیشتر از صفر باشد');
+      if (minutesPerTask <= 0) throw new Error('مدت زمان هر تسک باید بیشتر از صفر باشد');
+      
+      // الف) دریافت اطلاعات تکلیف
+      const course = get().courses.find(c => c.id === courseId);
+      if (!course) throw new Error('درس مورد نظر یافت نشد');
+      
+      const assignment = course.assignments.find(a => a.id === assignmentId);
+      if (!assignment) throw new Error('تکلیف مورد نظر یافت نشد');
+      
+      // ب) ایجاد تسک‌های جدید
+      const newTasks: Task[] = [];
+      const linkedTaskIds: string[] = [];
+      
+      for (let i = 1; i <= taskCount; i++) {
+        const taskId = `task_${Date.now()}_${i}`;
+        const newTask: Task = {
+          id: taskId,
+          title: `${assignment.title} - بخش ${i}`,
+          category: 'دانشگاه',
+          date: assignment.dueDate.split('T')[0], // تبدیل به YYYY-MM-DD
+          done: false,
+          createdAt: new Date().toISOString()
+        };
+        
+        newTasks.push(newTask);
+        linkedTaskIds.push(taskId);
+      }
+      
+      // ج) اضافه کردن تسک‌های جدید به store
+      const updatedTasks = [...get().tasks, ...newTasks];
+      set({ tasks: updatedTasks });
+      await saveTasks(currentUserId, updatedTasks);
+      
+      // د) لینک کردن تسک‌ها به تکلیف
+      const updatedCourses = get().courses.map(course =>
+        course.id === courseId
+          ? {
+              ...course,
+              assignments: course.assignments.map(assignment =>
+                assignment.id === assignmentId
+                  ? { ...assignment, linkedTaskIds: [...assignment.linkedTaskIds, ...linkedTaskIds] }
+                  : assignment
+              )
+            }
+          : course
+      );
+      
+      set({ courses: updatedCourses });
+      await saveCourses(currentUserId, updatedCourses);
+    },
+    'تسک‌های برنامه‌ریزی با موفقیت ایجاد شدند'
+  ),
   
   // Reflection actions
   addReflection: async (reflection) => {

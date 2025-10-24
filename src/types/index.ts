@@ -14,6 +14,9 @@ export interface Assignment {
   done: boolean;
   courseId: string;
   description?: string;
+  // ✅ فیلدهای جدید برای برنامه‌ریزی فعال
+  estimatedHours: number; // تعداد ساعت کار تخمینی برای اتمام
+  linkedTaskIds: string[]; // آرایه از Task.idهایی که برای این تکلیف ایجاد شده‌اند
 }
 
 export interface Course {
