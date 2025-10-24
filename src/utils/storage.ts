@@ -23,10 +23,57 @@ const COLLECTIONS = {
   TIMER_STATE: 'timerState'
 };
 
+// ✅ Data Cleansing Functions برای حذف فیلدهای undefined
+const cleanTaskData = (task: Task): any => {
+  const cleaned: any = { ...task };
+  
+  // حذف فیلدهای undefined
+  if (cleaned.description === undefined) delete cleaned.description;
+  if (cleaned.priority === undefined) delete cleaned.priority;
+  if (cleaned.tags === undefined) delete cleaned.tags;
+  if (cleaned.estimatedMinutes === undefined) delete cleaned.estimatedMinutes;
+  
+  return cleaned;
+};
+
+const cleanSessionData = (session: FocusSession): any => {
+  const cleaned: any = { ...session };
+  
+  // ✅ پاکسازی فیلد اختیاری taskId
+  if (cleaned.taskId === undefined) {
+    delete cleaned.taskId;
+  }
+  
+  return cleaned;
+};
+
+const cleanReflectionData = (reflection: Reflection): any => {
+  const cleaned: any = { ...reflection };
+  
+  // حذف فیلدهای undefined
+  if (cleaned.focusMinutes === undefined) delete cleaned.focusMinutes;
+  if (cleaned.note === undefined) delete cleaned.note;
+  if (cleaned.rating === undefined) delete cleaned.rating;
+  
+  return cleaned;
+};
+
+const cleanAssignmentData = (assignment: any): any => {
+  const cleaned: any = { ...assignment };
+  
+  // حذف فیلدهای undefined
+  if (cleaned.description === undefined) delete cleaned.description;
+  if (cleaned.estimatedHours === undefined) delete cleaned.estimatedHours;
+  if (cleaned.linkedTaskIds === undefined) delete cleaned.linkedTaskIds;
+  
+  return cleaned;
+};
+
 // ✅ Debounced save functions برای بهینه‌سازی عملکرد
 const saveTasksDebounced = debounce(async (userId: string, tasks: Task[]) => {
   try {
-    await setDoc(doc(db, COLLECTIONS.TASKS, userId), { tasks });
+    const cleanedTasks = tasks.map(cleanTaskData);
+    await setDoc(doc(db, COLLECTIONS.TASKS, userId), { tasks: cleanedTasks });
     console.log('Tasks saved to Firestore (debounced)');
   } catch (error) {
     console.error('Error saving tasks:', error);
@@ -35,7 +82,11 @@ const saveTasksDebounced = debounce(async (userId: string, tasks: Task[]) => {
 
 const saveCoursesDebounced = debounce(async (userId: string, courses: Course[]) => {
   try {
-    await setDoc(doc(db, COLLECTIONS.COURSES, userId), { courses });
+    const cleanedCourses = courses.map(course => ({
+      ...course,
+      assignments: course.assignments.map(cleanAssignmentData)
+    }));
+    await setDoc(doc(db, COLLECTIONS.COURSES, userId), { courses: cleanedCourses });
     console.log('Courses saved to Firestore (debounced)');
   } catch (error) {
     console.error('Error saving courses:', error);
@@ -44,7 +95,8 @@ const saveCoursesDebounced = debounce(async (userId: string, courses: Course[]) 
 
 const saveReflectionsDebounced = debounce(async (userId: string, reflections: Reflection[]) => {
   try {
-    await setDoc(doc(db, COLLECTIONS.REFLECTIONS, userId), { reflections });
+    const cleanedReflections = reflections.map(cleanReflectionData);
+    await setDoc(doc(db, COLLECTIONS.REFLECTIONS, userId), { reflections: cleanedReflections });
     console.log('Reflections saved to Firestore (debounced)');
   } catch (error) {
     console.error('Error saving reflections:', error);
@@ -53,7 +105,8 @@ const saveReflectionsDebounced = debounce(async (userId: string, reflections: Re
 
 const saveFocusSessionsDebounced = debounce(async (userId: string, focusSessions: FocusSession[]) => {
   try {
-    await setDoc(doc(db, COLLECTIONS.FOCUS_SESSIONS, userId), { focusSessions });
+    const cleanedSessions = focusSessions.map(cleanSessionData);
+    await setDoc(doc(db, COLLECTIONS.FOCUS_SESSIONS, userId), { focusSessions: cleanedSessions });
     console.log('Focus sessions saved to Firestore (debounced)');
   } catch (error) {
     console.error('Error saving focus sessions:', error);
@@ -240,8 +293,8 @@ export const saveTimerState = async (userId: string, timerState: TimerState | nu
         isPaused: timerState.isPaused
       };
       
-      // Only add taskId if it exists
-      if (timerState.taskId) {
+      // ✅ فقط اگر taskId وجود دارد و undefined نیست اضافه کن
+      if (timerState.taskId !== undefined && timerState.taskId !== null) {
         timerData.taskId = timerState.taskId;
       }
       
