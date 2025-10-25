@@ -621,11 +621,13 @@ export const useStore = create<AppStore>((set, get) => {
       
       if (currentTimer && currentTimer.mode === 'work') { // ✅ فقط سشن‌های کاری را ذخیره کن
         
-        const elapsedTimeSec = currentTimer.durationSec - currentTimer.remainingSec;
-        console.log('🔍 stopTimer - elapsedTimeSec:', elapsedTimeSec, 'durationSec:', currentTimer.durationSec, 'remainingSec:', currentTimer.remainingSec);
+        // ✅ محاسبه صحیح elapsed time بر اساس startTimestamp
+        const now = Date.now();
+        const elapsedTimeSec = Math.floor((now - currentTimer.startTimestamp) / 1000);
+        console.log('🔍 stopTimer - elapsedTimeSec:', elapsedTimeSec, 'startTimestamp:', currentTimer.startTimestamp, 'now:', now);
         
-        // ✅ شرط ضدگلوله: فقط زمانی ذخیره کن که تایمر در حالت کار بوده و بیش از یک دقیقه کار شده باشد
-        if (elapsedTimeSec >= 60) { // اگر حداقل 60 ثانیه کار شده
+        // ✅ شرط ضدگلوله: فقط زمانی ذخیره کن که تایمر در حالت کار بوده و بیش از 10 ثانیه کار شده باشد
+        if (elapsedTimeSec >= 10) { // اگر حداقل 10 ثانیه کار شده
           console.log('✅ stopTimer - Session will be saved, elapsed time:', elapsedTimeSec);
           const session = completeSession(currentTimer);
           console.log('🔍 stopTimer - created session:', session);
@@ -653,12 +655,13 @@ export const useStore = create<AppStore>((set, get) => {
     
     const currentTimer = get().timerState;
     if (currentTimer) {
-      // ✅ اصلاح منطق: استفاده از elapsed time به جای remaining time
+      // ✅ اصلاح منطق: استفاده از elapsed time بر اساس startTimestamp
       if (currentTimer.mode === 'work') {
-        const elapsedTimeSec = currentTimer.durationSec - currentTimer.remainingSec;
+        const now = Date.now();
+        const elapsedTimeSec = Math.floor((now - currentTimer.startTimestamp) / 1000);
         
-        // ✅ فقط اگر حداقل 60 ثانیه کار شده باشد، سشن را ذخیره کن
-        if (elapsedTimeSec >= 60) {
+        // ✅ فقط اگر حداقل 10 ثانیه کار شده باشد، سشن را ذخیره کن
+        if (elapsedTimeSec >= 10) {
           const session = completeSession(currentTimer);
           await get()._finalizeSession(session);
         }
@@ -869,9 +872,20 @@ export const useStore = create<AppStore>((set, get) => {
     const { currentUserId, gamification } = get();
     console.log('🔍 _syncGamification - currentUserId:', currentUserId, 'gamification:', gamification);
     
-    if (!currentUserId || !gamification) {
-      console.log('❌ _syncGamification - Missing currentUserId or gamification');
+    if (!currentUserId) {
+      console.log('❌ _syncGamification - Missing currentUserId');
       return;
+    }
+    
+    if (!gamification) {
+      console.log('⚠️ _syncGamification - gamification is null, initializing...');
+      // ✅ مقداردهی اولیه gamification
+      const initialGamification: GamificationData = {
+        userStats: [],
+        leaderboard: [],
+        lastUpdated: new Date().toISOString()
+      };
+      set({ gamification: initialGamification });
     }
     
     try {
@@ -881,9 +895,11 @@ export const useStore = create<AppStore>((set, get) => {
       console.log('🔍 _syncGamification - updatedUserStats:', updatedUserStats);
       
       // به‌روزرسانی آمار در store
-      const updatedGamification = {
-        ...gamification,
+      const currentGamification = get().gamification;
+      const updatedGamification: GamificationData = {
+        ...currentGamification,
         userStats: [updatedUserStats], // تبدیل به آرایه
+        leaderboard: currentGamification?.leaderboard || [], // تضمین وجود leaderboard
         lastUpdated: new Date().toISOString()
       };
       set({ gamification: updatedGamification });
