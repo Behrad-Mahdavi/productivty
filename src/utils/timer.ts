@@ -74,16 +74,25 @@ export const completeSession = (timerState: TimerState): FocusSession => {
   const elapsed = calculateElapsedTime(timerState);
   const completed = elapsed >= timerState.durationSec * 0.9; // 90% threshold
   
+  // ✅ محاسبه صحیح startTime بر اساس elapsed time
+  const now = new Date();
+  const startTime = new Date(now.getTime() - (elapsed * 1000)).toISOString();
+  
+  console.log('🔍 completeSession - timerState.startTimestamp:', timerState.startTimestamp);
+  console.log('🔍 completeSession - elapsed:', elapsed);
+  console.log('🔍 completeSession - calculated startTime:', startTime);
+  
   const session: FocusSession = {
     id: `session_${Date.now()}`,
     taskId: timerState.taskId,
-    startTime: new Date(timerState.startTimestamp).toISOString(),
-    endTime: new Date().toISOString(),
+    startTime: startTime,
+    endTime: now.toISOString(),
     durationSec: elapsed,
     completed,
     type: timerState.mode as 'work' | 'shortBreak' | 'longBreak',
   };
 
+  console.log('🔍 completeSession - created session:', session);
   return session;
 };
 

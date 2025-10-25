@@ -732,10 +732,20 @@ export const useStore = create<AppStore>((set, get) => {
   
   getFocusMinutesToday: () => {
     const today = new Date().toISOString().split('T')[0];
-    const todaySessions = get().focusSessions.filter(session => 
+    const focusSessions = get().focusSessions;
+    console.log('🔍 getFocusMinutesToday - today:', today);
+    console.log('🔍 getFocusMinutesToday - focusSessions count:', focusSessions.length);
+    console.log('🔍 getFocusMinutesToday - focusSessions:', focusSessions);
+    
+    const todaySessions = focusSessions.filter(session => 
       session.startTime.startsWith(today) && session.type === 'work'
     );
-    return todaySessions.reduce((total, session) => total + Math.floor(session.durationSec / 60), 0);
+    console.log('🔍 getFocusMinutesToday - todaySessions count:', todaySessions.length);
+    console.log('🔍 getFocusMinutesToday - todaySessions:', todaySessions);
+    
+    const totalMinutes = todaySessions.reduce((total, session) => total + Math.floor(session.durationSec / 60), 0);
+    console.log('🔍 getFocusMinutesToday - totalMinutes:', totalMinutes);
+    return totalMinutes;
   },
   
   getOverdueAssignments: () => {
