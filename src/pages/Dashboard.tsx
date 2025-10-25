@@ -152,7 +152,7 @@ export const Dashboard: React.FC = React.memo(() => {
               const Icon = stat.icon;
               return (
                 <div key={stat.title} className="col-6 col-lg-4">
-                  <div className={`card h-100 ${stat.bgColor} border-0 card-hover fade-in-up`}>
+                  <div className={`card h-100 ${stat.bgColor} border-0 stats-card fade-in-up`}>
                     <div className="card-body text-center p-4">
                       <div className={`${stat.color} mb-3`}>
                         <Icon size={28} />
