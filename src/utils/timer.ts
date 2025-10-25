@@ -18,7 +18,7 @@ export const createTimerState = (
   const duration = durationSec || TIMER_DURATIONS[mode];
   return {
     mode,
-    startTimestamp: now,
+    startTime: new Date(now).toISOString(),
     durationSec: duration,
     remainingSec: duration,
     taskId,
@@ -31,7 +31,7 @@ export const calculateElapsedTime = (timerState: TimerState): number => {
   if (timerState.isPaused) {
     return timerState.durationSec - timerState.remainingSec;
   }
-  const elapsed = Math.floor((Date.now() - timerState.startTimestamp) / 1000);
+  const elapsed = Math.floor((Date.now() - new Date(timerState.startTime).getTime()) / 1000);
   return Math.min(elapsed, timerState.durationSec);
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Square, SkipForward, Loader2 } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
-import { formatTime, getRemainingTime, getTimerProgress, isTimerComplete } from '../utils/timer';
+import { formatTime, getRemainingTime, getTimerProgress } from '../utils/timer';
 import { TimerSettings } from './TimerSettings';
 
 // توابع ثابت برای حالت‌های تایمر، خوانایی و کاهش خطاهای تایپی
@@ -13,15 +13,10 @@ const TIMER_MODES = {
 
 export const FocusTimer: React.FC = () => {
   // *** ✅ اصلاح: حذف completeCurrentTimer از انتخابگر که باعث ارور می‌شد ***
-  // ✅ اضافه کردن focusMinutesToday به انتخابگر برای رفع باگ رندرینگ آمار
+  // ✅ New Reducer-based Timer System
   const { 
     timerState, 
-    startTimer, 
-    pauseTimer, 
-    resumeTimer, 
-    stopTimer, 
-    skipTimer,
-    moveToNextPhase,
+    timerDispatch,
     getFocusMinutesToday
   } = useStore();
 
@@ -81,14 +76,11 @@ export const FocusTimer: React.FC = () => {
     setTimeLeft(remaining);
     setProgress(timerProgress);
 
-    // ✅ اصلاح ساختاری: استفاده از moveToNextPhase برای انتقال خودکار به فاز بعدی
-    if (isTimerComplete(timerState)) {
-      if (remaining <= 0) { 
-        moveToNextPhase(); // انتقال خودکار به فاز بعدی (تمرکز → استراحت → تمرکز)
-      }
-      return;
+    // ✅ New Reducer-based: استفاده از TIME_ELAPSED action
+    if (!timerState.isPaused) {
+      timerDispatch({ type: 'TIME_ELAPSED', seconds: 1 });
     }
-  }, [timerState, moveToNextPhase]); // ✅ وابستگی به moveToNextPhase برای انتقال فاز
+  }, [timerState, timerDispatch]);
 
   useEffect(() => {
     updateTimer();
@@ -98,20 +90,20 @@ export const FocusTimer: React.FC = () => {
 
   // --- Handlers ---
 
+  // ✅ New Reducer-based Handlers
   const handleStart = () => {
     setIsProcessing(true);
-    startTimer(TIMER_MODES.WORK);
+    timerDispatch({ type: 'START', mode: 'work' });
     playSound('start');
     setTimeout(() => setIsProcessing(false), 50); 
   };
 
   const handlePause = () => {
     setIsProcessing(true);
+    timerDispatch({ type: 'PAUSE_RESUME' });
     if (timerState?.isPaused) {
-      resumeTimer();
       playSound('start');
     } else {
-      pauseTimer();
       playSound('pause');
     }
     setTimeout(() => setIsProcessing(false), 50);
@@ -119,13 +111,13 @@ export const FocusTimer: React.FC = () => {
 
   const handleStop = () => {
     setIsProcessing(true);
-    stopTimer();
+    timerDispatch({ type: 'STOP_SAVE' });
     setTimeout(() => setIsProcessing(false), 50);
   };
 
   const handleSkip = () => {
     setIsProcessing(true);
-    skipTimer();
+    timerDispatch({ type: 'SKIP_PHASE' });
     setTimeout(() => setIsProcessing(false), 50);
   };
 

@@ -180,7 +180,7 @@ export const loadData = async (userId: string): Promise<AppData> => {
 
     const timerState: TimerState | null = timerStateSnapshot.exists() ? {
       mode: timerStateSnapshot.data().mode,
-      startTimestamp: timerStateSnapshot.data().startTimestamp,
+      startTime: timerStateSnapshot.data().startTime || new Date(timerStateSnapshot.data().startTimestamp).toISOString(),
       durationSec: timerStateSnapshot.data().durationSec,
       remainingSec: timerStateSnapshot.data().remainingSec,
       taskId: timerStateSnapshot.data().taskId,
@@ -206,8 +206,8 @@ export const loadData = async (userId: string): Promise<AppData> => {
       reflections,
       focusSessions,
       timerState: timerState || {
-        mode: 'idle',
-        startTimestamp: 0,
+        mode: 'work',
+        startTime: new Date().toISOString(),
         durationSec: 25 * 60,
         remainingSec: 25 * 60,
         cyclesCompleted: 0,
@@ -223,8 +223,8 @@ export const loadData = async (userId: string): Promise<AppData> => {
       reflections: [],
       focusSessions: [],
       timerState: {
-        mode: 'idle',
-        startTimestamp: 0,
+        mode: 'work',
+        startTime: new Date().toISOString(),
         durationSec: 25 * 60,
         remainingSec: 25 * 60,
         cyclesCompleted: 0,
@@ -286,7 +286,7 @@ export const saveTimerState = async (userId: string, timerState: TimerState | nu
       const timerData: any = {
         userId,
         mode: timerState.mode,
-        startTimestamp: timerState.startTimestamp,
+        startTime: timerState.startTime,
         durationSec: timerState.durationSec,
         remainingSec: timerState.remainingSec,
         cyclesCompleted: timerState.cyclesCompleted,
@@ -315,7 +315,7 @@ export const loadTimerState = async (userId: string): Promise<TimerState> => {
       const data = timerStateDoc.data();
       return {
         mode: data.mode,
-        startTimestamp: data.startTimestamp,
+        startTime: data.startTime || new Date(data.startTimestamp).toISOString(),
         durationSec: data.durationSec,
         remainingSec: data.remainingSec,
         taskId: data.taskId || undefined,
@@ -328,8 +328,8 @@ export const loadTimerState = async (userId: string): Promise<TimerState> => {
   }
 
   return {
-    mode: 'idle',
-    startTimestamp: 0,
+    mode: 'work',
+    startTime: new Date().toISOString(),
     durationSec: 25 * 60,
     remainingSec: 25 * 60,
     cyclesCompleted: 0,
