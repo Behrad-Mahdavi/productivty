@@ -822,11 +822,13 @@ h1, h2, h3, h4, h5, h6 {
 .zen-timer-container {
   background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
   border-radius: 24px;
-  padding: 2rem;
+  padding: 3rem;
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.8s ease;
+  margin: 2rem auto;
+  max-width: 500px;
 }
 
 .zen-timer-header {
@@ -837,10 +839,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .zen-timer-title {
-  font-size: 1.25rem;
-  font-weight: 500;
+  font-family: 'هقشد', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #1d1d1f;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.5px;
 }
 
 .zen-timer-body {
@@ -910,16 +913,28 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .zen-time-display {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: clamp(3rem, 8vw, 5rem);
-  font-weight: 700;
+  font-family: 'Vazirmatn', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: clamp(3.5rem, 10vw, 6rem);
+  font-weight: 800;
   color: #1d1d1f;
   margin: 0.5rem 0;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.5s ease;
+  animation: fadeInNumber 0.6s ease-out;
+}
+
+@keyframes fadeInNumber {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .zen-mode-text {
@@ -940,14 +955,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .zen-motivational-text {
-  font-size: 1.125rem;
-  font-weight: 500;
+  font-family: 'IRANSansXVF', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #6b7280;
   font-style: italic;
   line-height: 1.6;
   transition: opacity 0.6s ease, color 0.3s ease, transform 0.3s ease;
   margin: 0;
   max-width: 400px;
+  letter-spacing: -0.3px;
 }
 
 .fade-in {
@@ -1059,16 +1076,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .zen-stat-icon {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-  opacity: 0.8;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  opacity: 0.6;
 }
 
 .zen-stat-number {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1d1d1f;
+  font-family: 'IRANSansXVF', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #9ca3af;
   letter-spacing: -0.02em;
   margin-bottom: 0.25rem;
   transition: all 0.3s ease;
@@ -1080,9 +1097,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .zen-stat-label {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #9ca3af;
   font-weight: 500;
+  opacity: 0.8;
 }
 
 /* 🎨 Zen State Animations */
@@ -1112,21 +1130,24 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 🌈 Zen Ambient Background Changes - تجربه محیطی */
 .zen-timer-container.work-mode {
-  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
-  border-color: rgba(91, 141, 239, 0.2);
-  box-shadow: 0 4px 20px rgba(91, 141, 239, 0.1);
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 50%, #ffffff 100%);
+  border-color: rgba(91, 141, 239, 0.3);
+  box-shadow: 0 8px 32px rgba(91, 141, 239, 0.2);
+  transform: scale(1.02);
 }
 
 .zen-timer-container.break-mode {
-  background: linear-gradient(180deg, #f0fff4 0%, #ffffff 100%);
-  border-color: rgba(168, 230, 207, 0.3);
-  box-shadow: 0 4px 20px rgba(168, 230, 207, 0.1);
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 50%, #ffffff 100%);
+  border-color: rgba(76, 175, 80, 0.3);
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
+  transform: scale(1.02);
 }
 
 .zen-timer-container.long-break-mode {
-  background: linear-gradient(180deg, #fffbea 0%, #ffffff 100%);
-  border-color: rgba(245, 166, 35, 0.2);
-  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.1);
+  background: linear-gradient(135deg, #fff8e1 0%, #fffbf0 50%, #ffffff 100%);
+  border-color: rgba(255, 193, 7, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 193, 7, 0.2);
+  transform: scale(1.02);
 }
 
 /* Focus Mode - کم‌نور کردن المان‌های فرعی */
@@ -1138,6 +1159,45 @@ h1, h2, h3, h4, h5, h6 {
 
 .zen-timer-container.focus-mode .zen-ring {
   filter: drop-shadow(0 8px 24px rgba(91, 141, 239, 0.2));
+}
+
+/* 🎯 Flow Mode - تمرکز کامل روی تایمر */
+.dashboard-container.flow-mode {
+  position: relative;
+}
+
+.dashboard-container.flow-mode::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  z-index: 1;
+  transition: all 0.5s ease;
+}
+
+.dashboard-container.flow-mode .dimmed {
+  opacity: 0.3;
+  filter: blur(1px);
+  transition: all 0.5s ease;
+}
+
+.dashboard-container.flow-mode .timer-focused {
+  z-index: 10;
+  position: relative;
+}
+
+.dashboard-container.flow-mode .timer-section.focused {
+  transform: scale(1.05);
+  transition: transform 0.5s ease;
+}
+
+.dashboard-container.flow-mode .timer-section.focused .zen-timer-container {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(91, 141, 239, 0.3);
 }
 
 /* 📱 Zen Responsive Design */

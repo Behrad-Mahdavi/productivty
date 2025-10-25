@@ -15,6 +15,7 @@ export const Dashboard: React.FC = React.memo(() => {
   const getFocusMinutesToday = useStore(state => state.getFocusMinutesToday);
   const getOverdueAssignments = useStore(state => state.getOverdueAssignments);
   const startTimer = useStore(state => state.startTimer);
+  const timerState = useStore(state => state.timerState);
   
   // ✅ اضافه کردن focusSessions برای reactivity
   useStore(state => state.focusSessions);
@@ -69,10 +70,13 @@ export const Dashboard: React.FC = React.memo(() => {
     },
   ];
 
+  // ✅ Check if timer is active for Flow Mode
+  const isTimerActive = timerState && !timerState.isPaused;
+
   return (
-    <div>
+    <div className={`dashboard-container ${isTimerActive ? 'flow-mode' : ''}`}>
       {/* Header with improved hierarchy */}
-      <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between mb-5 gap-4">
+      <div className={`d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between mb-5 gap-4 ${isTimerActive ? 'dimmed' : ''}`}>
         <div className="flex-grow-1">
           <h1 className="h1 mb-2 fw-bold text-dark">
             سلام! 👋
@@ -128,13 +132,15 @@ export const Dashboard: React.FC = React.memo(() => {
 
       {/* Main Content */}
       <div className="row g-4">
-        {/* Focus Timer */}
-        <div className="col-lg-4">
-          <FocusTimer />
+        {/* Focus Timer - مرکز تجربه */}
+        <div className={`col-lg-4 ${isTimerActive ? 'timer-focused' : ''}`}>
+          <div className={`timer-section ${isTimerActive ? 'focused' : ''}`}>
+            <FocusTimer />
+          </div>
         </div>
 
         {/* Today's Tasks */}
-        <div className="col-lg-8">
+        <div className={`col-lg-8 ${isTimerActive ? 'dimmed' : ''}`}>
           <div className="card">
             <div className="card-header d-flex align-items-center justify-content-between">
               <h5 className="mb-0">کارهای امروز</h5>
