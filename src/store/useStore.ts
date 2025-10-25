@@ -788,11 +788,13 @@ export const useStore = create<AppStore>((set, get) => {
         type: 'work' as const
       };
       
-      // ✅ اعتماد به Real-time Sync - حذف به‌روزرسانی محلی
+      // ✅ Manual sync در صورت عدم فعال شدن Listener
       const sessionsToSave = [...get().focusSessions, session];
       await saveFocusSessions(currentUserId, sessionsToSave);
       
-      // ✅ آمار توسط Listener به‌روزرسانی می‌شود
+      // ✅ Manual sync focusSessions و gamification
+      set({ focusSessions: sessionsToSave });
+      await get()._syncGamification();
     },
     'سشن تمرکز با موفقیت اضافه شد'
   ),
@@ -814,12 +816,14 @@ export const useStore = create<AppStore>((set, get) => {
         endTime: new Date(new Date(session.startTime).getTime() + minutes * 60 * 1000).toISOString()
       };
       
-      // ✅ اعتماد به Real-time Sync - حذف به‌روزرسانی محلی
+      // ✅ Manual sync در صورت عدم فعال شدن Listener
       const updatedSessions = [...sessions];
       updatedSessions[sessionIndex] = updatedSession;
       await saveFocusSessions(currentUserId, updatedSessions);
       
-      // ✅ آمار توسط Listener به‌روزرسانی می‌شود
+      // ✅ Manual sync focusSessions و gamification
+      set({ focusSessions: updatedSessions });
+      await get()._syncGamification();
     },
     'سشن تمرکز با موفقیت ویرایش شد'
   ),
@@ -833,11 +837,13 @@ export const useStore = create<AppStore>((set, get) => {
       const sessionExists = sessions.some(s => s.id === sessionId);
       if (!sessionExists) throw new Error('سشن مورد نظر یافت نشد');
       
-      // ✅ اعتماد به Real-time Sync - حذف به‌روزرسانی محلی
+      // ✅ Manual sync در صورت عدم فعال شدن Listener
       const updatedSessions = sessions.filter(s => s.id !== sessionId);
       await saveFocusSessions(currentUserId, updatedSessions);
       
-      // ✅ آمار توسط Listener به‌روزرسانی می‌شود
+      // ✅ Manual sync focusSessions و gamification
+      set({ focusSessions: updatedSessions });
+      await get()._syncGamification();
     },
     'سشن تمرکز با موفقیت حذف شد'
   ),
@@ -860,11 +866,17 @@ export const useStore = create<AppStore>((set, get) => {
     await saveFocusSessions(currentUserId, sessionsToSave);
     console.log('✅ _finalizeSession - saved to Firestore successfully');
     
+    // ✅ Manual sync در صورت عدم فعال شدن Listener
+    console.log('🔍 _finalizeSession - manually updating focusSessions in store...');
+    set({ focusSessions: sessionsToSave });
+    
+    // ✅ Manual sync gamification
+    console.log('🔍 _finalizeSession - manually calling _syncGamification...');
+    await get()._syncGamification();
+    
     // ✅ اعتماد به Real-time Sync برای Reflections
     //    منطق به‌روزرسانی محلی Reflections حذف شد
     //    Listener Reflections باید بقیه کارها را انجام دهد
-    
-    // ✅ آمار توسط Listener به‌روزرسانی می‌شود
   },
 
   // ✅ لایه هماهنگ‌سازی گیمیفیکیشن - به‌روزرسانی خودکار آمار
