@@ -913,7 +913,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .zen-time-display {
-  font-family: 'Vazirmatn', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: 'IRANSansXVF', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   font-size: clamp(3.5rem, 10vw, 6rem);
   font-weight: 800;
   color: #1d1d1f;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Target, TrendingUp, Clock, BookOpen, Brain } from 'lucide-react';
+import { Plus, Target, TrendingUp, Clock, BookOpen, Brain, Flame } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { TaskCard } from '../components/TaskCard';
 import { TaskForm } from '../components/TaskForm';
@@ -30,6 +30,37 @@ export const Dashboard: React.FC = React.memo(() => {
   const focusMinutes = getFocusMinutesToday();
   const overdueAssignments = getOverdueAssignments();
   
+  // ✅ محاسبه Streak - تعداد روزهای متوالی تمرکز
+  const calculateStreak = () => {
+    const focusSessions = useStore.getState().focusSessions;
+    if (!focusSessions || focusSessions.length === 0) return 0;
+    
+    // مرتب‌سازی بر اساس startTime
+    const sortedSessions = focusSessions.sort((a, b) => 
+      new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+    );
+    
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // بررسی روزهای متوالی
+    for (let i = 0; i < sortedSessions.length; i++) {
+      const sessionDate = new Date(sortedSessions[i].startTime);
+      sessionDate.setHours(0, 0, 0, 0);
+      
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - i);
+      
+      if (sessionDate.getTime() === expectedDate.getTime()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  };
 
   const handleStartTimer = (taskId: string) => {
     startTimer('work', taskId);
@@ -67,6 +98,14 @@ export const Dashboard: React.FC = React.memo(() => {
       color: 'text-danger',
       bgColor: 'bg-danger bg-opacity-10',
       description: 'نیاز به توجه',
+    },
+    {
+      title: 'Streak',
+      value: calculateStreak(),
+      icon: Flame,
+      color: 'text-warning',
+      bgColor: 'bg-warning bg-opacity-10',
+      description: 'روزهای متوالی تمرکز',
     },
   ];
 
@@ -112,7 +151,7 @@ export const Dashboard: React.FC = React.memo(() => {
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.title} className="col-6">
+                <div key={stat.title} className="col-6 col-lg-4">
                   <div className={`card h-100 ${stat.bgColor} border-0 card-hover fade-in-up`}>
                     <div className="card-body text-center p-4">
                       <div className={`${stat.color} mb-3`}>
