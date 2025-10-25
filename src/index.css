@@ -818,50 +818,63 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* 🎯 Pomodoro Timer - Apple-style Design */
-.timer-container {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border-radius: 20px;
-  overflow: hidden;
+/* 🧘 Zen Pomodoro Timer - Minimal & Human Design */
+.zen-timer-container {
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+  border-radius: 24px;
+  padding: 2rem;
   position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.8s ease;
 }
 
-.timer-ring-container {
+.zen-timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.zen-timer-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+}
+
+.zen-timer-body {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* Zen Ring Design */
+.zen-ring-container {
   position: relative;
   display: inline-block;
+  margin: 2rem 0;
 }
 
-.timer-ring {
+.zen-ring {
   position: relative;
-  width: 240px;
-  height: 240px;
+  width: 280px;
+  height: 280px;
   margin: 0 auto;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
 }
 
-.progress-ring {
+.zen-progress-ring {
   transform: rotate(-90deg);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
-.progress-ring-circle {
-  stroke: #5B8DEF;
+.zen-progress-circle {
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
+  transition: stroke-dashoffset 1s ease-in-out, stroke 0.6s ease;
+  filter: drop-shadow(0 0 4px rgba(91, 141, 239, 0.3));
 }
 
-.timer-ring.work-mode .progress-ring-circle {
-  stroke: #5B8DEF;
-}
-
-.timer-ring.break-mode .progress-ring-circle {
-  stroke: #A8E6CF;
-}
-
-.timer-ring.long-break-mode .progress-ring-circle {
-  stroke: #A8E6CF;
-}
-
-.timer-center {
+/* Zen Center Content */
+.zen-center {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -870,108 +883,225 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 10;
 }
 
-.timer-icon {
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.timer-time-display {
+.zen-time-display {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 2.5rem;
+  font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 600;
   color: #1d1d1f;
   margin: 0.5rem 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
-.timer-mode-text {
+.zen-mode-text {
   font-size: 0.875rem;
   font-weight: 500;
   color: #86868b;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
+  letter-spacing: -0.01em;
 }
 
-.motivational-text {
-  min-height: 1.5rem;
+/* Zen Motivational Text */
+.zen-motivational {
+  margin: 2rem 0;
+  min-height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.motivational-text p {
+.zen-motivational-text {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #6b7280;
   font-style: italic;
-  transition: color 0.3s ease;
+  line-height: 1.5;
+  transition: opacity 0.6s ease, color 0.3s ease;
+  margin: 0;
+  max-width: 300px;
 }
 
-.timer-action-btn {
-  border-radius: 12px;
+/* Zen Action Buttons */
+.zen-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.zen-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 16px;
   font-weight: 600;
+  font-size: 1rem;
   letter-spacing: -0.01em;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #f8f9fa;
+  color: #374151;
 }
 
-.timer-action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.zen-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.number-display {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+.zen-action-btn.btn-primary {
+  background: linear-gradient(135deg, #5B8DEF, #4c7de8);
+  color: white;
+}
+
+.zen-action-btn.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.zen-action-btn.btn-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.zen-btn-icon {
+  transition: transform 0.2s ease;
+}
+
+.zen-btn-text {
   font-weight: 600;
+}
+
+.zen-secondary-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.zen-secondary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zen-secondary-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  transform: translateY(-1px);
+}
+
+/* Zen Stats */
+.zen-stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.zen-stat {
+  text-align: center;
+}
+
+.zen-stat-number {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
   letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
 }
 
-/* 🎨 Timer State Animations */
-.timer-ring.breathing {
-  animation: breathing 4s ease-in-out infinite;
+.zen-stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-@keyframes breathing {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+/* 🎨 Zen State Animations */
+.zen-ring.breathing {
+  animation: zenBreathing 4s ease-in-out infinite;
 }
 
-.timer-ring.pulse {
-  animation: pulse 2s ease-in-out infinite;
+@keyframes zenBreathing {
+  0%, 100% { 
+    transform: scale(1);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+  }
+  50% { 
+    transform: scale(1.01);
+    filter: drop-shadow(0 4px 12px rgba(91, 141, 239, 0.15));
+  }
 }
 
-@keyframes pulse {
+.zen-ring.pulse {
+  animation: zenPulse 2s ease-in-out infinite;
+}
+
+@keyframes zenPulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  50% { opacity: 0.85; }
 }
 
-/* 🌈 Ambient Background Changes */
-.timer-container.work-mode {
-  background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+/* 🌈 Zen Ambient Background Changes */
+.zen-timer-container.work-mode {
+  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+  border-color: rgba(91, 141, 239, 0.1);
 }
 
-.timer-container.break-mode {
-  background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+.zen-timer-container.break-mode {
+  background: linear-gradient(180deg, #f0fff4 0%, #ffffff 100%);
+  border-color: rgba(168, 230, 207, 0.2);
 }
 
-.timer-container.long-break-mode {
-  background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+.zen-timer-container.long-break-mode {
+  background: linear-gradient(180deg, #fffbea 0%, #ffffff 100%);
+  border-color: rgba(245, 166, 35, 0.1);
 }
 
-/* 📱 Responsive Design */
+/* 📱 Zen Responsive Design */
 @media (max-width: 768px) {
-  .timer-ring {
-    width: 200px;
-    height: 200px;
+  .zen-timer-container {
+    padding: 1.5rem;
+    margin: 1rem;
   }
   
-  .progress-ring {
-    width: 200px;
-    height: 200px;
+  .zen-ring {
+    width: 240px;
+    height: 240px;
   }
   
-  .timer-time-display {
-    font-size: 2rem;
+  .zen-progress-ring {
+    width: 240px;
+    height: 240px;
   }
   
-  .timer-action-btn {
-    padding: 0.75rem 1.5rem !important;
+  .zen-time-display {
+    font-size: 2.5rem;
+  }
+  
+  .zen-action-btn {
+    padding: 0.875rem 1.5rem;
     font-size: 0.875rem;
+  }
+  
+  .zen-stats {
+    gap: 2rem;
+  }
+  
+  .zen-stat-number {
+    font-size: 1.25rem;
   }
 }

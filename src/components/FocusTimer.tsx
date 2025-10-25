@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Pause, Square, SkipForward, Loader2, Clock, Coffee, Zap } from 'lucide-react'; 
+import { Play, Pause, Square, SkipForward, Loader2 } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
 import { formatTime, getRemainingTime, getTimerProgress, isTimerComplete } from '../utils/timer';
 import { TimerSettings } from './TimerSettings';
@@ -193,121 +193,109 @@ export const FocusTimer: React.FC = () => {
     };
   };
 
-  const getTimerIcon = () => {
-    if (!timerState) return <Clock size={24} className="text-muted" />;
-    switch (timerState.mode) {
-      case TIMER_MODES.WORK: return <Zap size={24} className="text-primary" />;
-      case TIMER_MODES.SHORT_BREAK: 
-      case TIMER_MODES.LONG_BREAK: return <Coffee size={24} className="text-success" />;
-      default: return <Clock size={24} className="text-muted" />;
-    }
-  };
 
   const actionButton = getActionButton();
 
   return (
-    <div className={`card shadow-lg border-0 timer-container ${getModeClass()}`}>
-      <div className="card-header bg-transparent border-0 pb-0">
-        <div className="d-flex align-items-center justify-content-between">
-          <h5 className="mb-0 fw-bold">تایمر تمرکز</h5>
-          <TimerSettings />
-        </div>
+    <div className={`zen-timer-container ${getModeClass()}`}>
+      <div className="zen-timer-header">
+        <div className="zen-timer-title">تمرکز</div>
+        <TimerSettings />
       </div>
       
-      <div className="card-body text-center py-5">
-        {/* Progress Ring */}
-        <div className="timer-ring-container mb-4">
-          <div className={`timer-ring ${getModeClass()} ${timerState && !timerState.isPaused ? 'breathing' : ''}`}>
-            <svg className="progress-ring" width="240" height="240">
+      <div className="zen-timer-body">
+        {/* Zen Progress Ring */}
+        <div className="zen-ring-container">
+          <div className={`zen-ring ${getModeClass()} ${timerState && !timerState.isPaused ? 'breathing' : ''}`}>
+            <svg className="zen-progress-ring" width="280" height="280">
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#5B8DEF" />
+                  <stop offset="100%" stopColor="#F5A623" />
+                </linearGradient>
+              </defs>
               <circle
-                className="progress-ring-circle"
-                stroke="currentColor"
-                strokeWidth="8"
+                className="zen-progress-circle"
+                stroke="url(#progressGradient)"
+                strokeWidth="6"
                 fill="transparent"
-                r="110"
-                cx="120"
-                cy="120"
+                r="130"
+                cx="140"
+                cy="140"
                 style={{
-                  strokeDasharray: '691.15',
-                  strokeDashoffset: `${691.15 - (691.15 * progress) / 100}`,
-                  transition: 'stroke-dashoffset 0.3s ease'
+                  strokeDasharray: '816.81',
+                  strokeDashoffset: `${816.81 - (816.81 * progress) / 100}`,
+                  transition: 'stroke-dashoffset 1s ease-in-out'
                 }}
               />
             </svg>
             
-            {/* Center Content */}
-            <div className="timer-center">
-              <div className="timer-icon mb-2">
-                {getTimerIcon()}
-              </div>
-              <div className="timer-time-display">
+            {/* Zen Center Content */}
+            <div className="zen-center">
+              <div className="zen-time-display">
                 {formatTime(timeLeft)}
               </div>
-              <div className="timer-mode-text">
+              <div className="zen-mode-text">
                 {getModeText()}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Motivational Text */}
-        <div className="motivational-text mb-4">
-          <p className="mb-0 text-muted fs-6">
+        {/* Zen Motivational Text */}
+        <div className="zen-motivational">
+          <p className="zen-motivational-text">
             {getMotivationalText()}
           </p>
         </div>
 
-        {/* Action Button */}
-        <div className="d-flex justify-content-center gap-3 mb-4">
+        {/* Zen Action Button */}
+        <div className="zen-actions">
           <button
             onClick={actionButton.onClick}
             disabled={isProcessing}
-            className={`btn ${actionButton.className} btn-lg px-5 py-3 timer-action-btn`}
+            className={`zen-action-btn ${actionButton.className}`}
           >
             {isProcessing ? (
-              <Loader2 size={20} className="me-2 animate-spin" />
+              <Loader2 size={24} className="zen-btn-icon animate-spin" />
             ) : (
               actionButton.icon
             )}
-            {actionButton.text}
+            <span className="zen-btn-text">{actionButton.text}</span>
           </button>
           
           {timerState && (
-            <>
+            <div className="zen-secondary-actions">
               <button
                 onClick={handleStop}
                 disabled={isProcessing}
-                className="btn btn-outline-danger btn-lg px-4 py-3"
+                className="zen-secondary-btn"
+                title="پایان"
               >
-                <Square size={20} className="me-2" />
-                پایان
+                <Square size={18} />
               </button>
               
               <button
                 onClick={handleSkip}
                 disabled={isProcessing}
-                className="btn btn-outline-secondary btn-lg px-4 py-3"
+                className="zen-secondary-btn"
+                title="رد کردن"
               >
-                <SkipForward size={20} className="me-2" />
-                رد کردن
+                <SkipForward size={18} />
               </button>
-            </>
+            </div>
           )}
         </div>
 
-        {/* Stats */}
-        <div className="row g-3">
-          <div className="col-6">
-            <div className="text-center">
-              <div className="h4 mb-1 text-primary number-display">{focusMinutesToday}</div>
-              <div className="text-muted small">دقیقه امروز</div>
-            </div>
+        {/* Zen Stats */}
+        <div className="zen-stats">
+          <div className="zen-stat">
+            <div className="zen-stat-number">{focusMinutesToday}</div>
+            <div className="zen-stat-label">دقیقه امروز</div>
           </div>
-          <div className="col-6">
-            <div className="text-center">
-              <div className="h4 mb-1 text-success number-display">{timerState?.cyclesCompleted || 0}</div>
-              <div className="text-muted small">چرخه‌ها</div>
-            </div>
+          <div className="zen-stat">
+            <div className="zen-stat-number">{timerState?.cyclesCompleted || 0}</div>
+            <div className="zen-stat-label">چرخه‌ها</div>
           </div>
         </div>
       </div>
