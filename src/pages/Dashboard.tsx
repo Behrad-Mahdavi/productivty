@@ -40,6 +40,7 @@ export const Dashboard: React.FC = React.memo(() => {
       icon: Target,
       color: 'text-success',
       bgColor: 'bg-success bg-opacity-10',
+      description: 'از کارهای امروز',
     },
     {
       title: 'دقیقه تمرکز',
@@ -47,6 +48,7 @@ export const Dashboard: React.FC = React.memo(() => {
       icon: Clock,
       color: 'text-info',
       bgColor: 'bg-info bg-opacity-10',
+      description: 'زمان مفید امروز',
     },
     {
       title: 'کارهای امروز',
@@ -54,6 +56,7 @@ export const Dashboard: React.FC = React.memo(() => {
       icon: TrendingUp,
       color: 'text-primary',
       bgColor: 'bg-primary bg-opacity-10',
+      description: 'تسک‌های تعریف شده',
     },
     {
       title: 'تکالیف عقب‌افتاده',
@@ -61,30 +64,32 @@ export const Dashboard: React.FC = React.memo(() => {
       icon: BookOpen,
       color: 'text-danger',
       bgColor: 'bg-danger bg-opacity-10',
+      description: 'نیاز به توجه',
     },
   ];
 
   return (
     <div>
-      {/* Header */}
-      <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between mb-4 gap-3">
-        <div>
-          <h1 className="h2 mb-1 fw-bold text-dark">داشبورد</h1>
+      {/* Header with improved hierarchy */}
+      <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between mb-5 gap-4">
+        <div className="flex-grow-1">
+          <h1 className="h1 mb-2 fw-bold text-dark">سلام بهراد! 👋</h1>
           <DateDisplay variant="compact" showTime={true} />
+          <p className="text-muted mt-2 mb-0">آماده‌ای برای یک روز پربار؟ 🌅</p>
         </div>
-        <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-lg-auto">
+        <div className="d-flex flex-column flex-sm-row gap-3 w-100 w-lg-auto">
           <button
             onClick={() => setShowReflectionForm(true)}
-            className="btn btn-success flex-fill"
+            className="btn btn-success flex-fill px-4 py-3"
           >
-            <Brain size={16} className="me-1" />
+            <Brain size={18} className="me-2" />
             بازتاب روزانه
           </button>
           <button
             onClick={() => setShowTaskForm(true)}
-            className="btn btn-primary flex-fill"
+            className="btn btn-primary flex-fill px-4 py-3"
           >
-            <Plus size={16} className="me-1" />
+            <Plus size={18} className="me-2" />
             کار جدید
           </button>
         </div>
@@ -96,20 +101,19 @@ export const Dashboard: React.FC = React.memo(() => {
           <DateDisplay variant="card" showTime={true} />
         </div>
         <div className="col-12 col-lg-8">
-          <div className="row g-3">
+          <div className="row g-4">
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
                 <div key={stat.title} className="col-6">
-                  <div className={`card h-100 ${stat.bgColor}`}>
-                    <div className="card-body">
-                      <div className="d-flex align-items-center justify-content-between">
-                        <div>
-                          <p className="card-text text-muted small mb-1">{stat.title}</p>
-                          <h4 className={`mb-0 ${stat.color}`}>{stat.value}</h4>
-                        </div>
-                        <Icon className={`${stat.color} fs-4`} />
+                  <div className={`card h-100 ${stat.bgColor} border-0 card-hover fade-in-up`}>
+                    <div className="card-body text-center p-4">
+                      <div className={`${stat.color} mb-3`}>
+                        <Icon size={28} />
                       </div>
+                      <h3 className="h3 mb-2 fw-bold number-display stat-counter">{stat.value}</h3>
+                      <h6 className="h6 mb-1 fw-semibold text-dark">{stat.title}</h6>
+                      <p className="text-muted mb-0 small">{stat.description}</p>
                     </div>
                   </div>
                 </div>
@@ -146,16 +150,20 @@ export const Dashboard: React.FC = React.memo(() => {
               {todayTasks.length === 0 ? (
                 <div className="text-center py-5">
                   <div className="card border-0 shadow-sm">
-                    <div className="card-body">
-                      <Target size={48} className="text-muted mb-3" />
-                      <h5 className="text-muted mb-2">هیچ کاری برای امروز تعریف نشده</h5>
-                      <p className="text-muted mb-4">برای شروع، کار جدیدی اضافه کنید</p>
+                    <div className="card-body p-5">
+                      <div className="mb-4">
+                        <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{width: '80px', height: '80px'}}>
+                          <Target size={40} className="text-primary" />
+                        </div>
+                      </div>
+                      <h4 className="h4 mb-3 text-dark">اولین قدم روزت رو تعریف کن 🌅</h4>
+                      <p className="text-muted mb-4 fs-6">هر سفر بزرگ با یک قدم کوچک شروع می‌شه. بیا اولین کار امروزت رو اضافه کنیم!</p>
                       <button
                         onClick={() => setShowTaskForm(true)}
-                        className="btn btn-primary"
+                        className="btn btn-primary btn-lg px-4 py-3"
                       >
-                        <Plus size={16} className="me-1" />
-                        اولین کار را اضافه کن
+                        <Plus size={20} className="me-2" />
+                        شروع کن
                       </button>
                     </div>
                   </div>
