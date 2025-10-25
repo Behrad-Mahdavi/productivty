@@ -221,6 +221,16 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* No hover class برای جلوگیری از hover effects */
+.no-hover {
+  transition: none !important;
+}
+
+.no-hover:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* Mobile responsive improvements */
 @media (max-width: 576px) {
   .btn {
@@ -732,21 +742,36 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Persian Date Picker Styles */
 .persian-date-picker {
-  z-index: 9999 !important;
+  z-index: 1;
   position: relative;
 }
 
 .persian-date-picker .dropdown-menu {
-  z-index: 9999 !important;
+  z-index: 10000 !important;
   min-width: 300px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15);
   border: 1px solid #e9ecef;
   border-radius: 8px;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
 }
 
 .persian-date-picker .dropdown-menu.show {
-  z-index: 9999 !important;
+  z-index: 10000 !important;
   display: block;
+}
+
+.persian-date-picker .form-control {
+  z-index: 2;
+  position: relative;
+}
+
+.persian-date-picker .input-group {
+  z-index: 1;
+  position: relative;
 }
 
 /* Dropdown z-index fix */
