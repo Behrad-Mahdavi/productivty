@@ -16,6 +16,9 @@ export const Dashboard: React.FC = React.memo(() => {
   const getOverdueAssignments = useStore(state => state.getOverdueAssignments);
   const startTimer = useStore(state => state.startTimer);
   
+  // ✅ اضافه کردن focusSessions برای reactivity
+  const focusSessions = useStore(state => state.focusSessions);
+  
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showReflectionForm, setShowReflectionForm] = useState(false);
   
@@ -24,6 +27,12 @@ export const Dashboard: React.FC = React.memo(() => {
   const progress = getTodayProgress();
   const focusMinutes = getFocusMinutesToday();
   const overdueAssignments = getOverdueAssignments();
+  
+  // ✅ Debug logs برای بررسی focus minutes
+  console.log('🔍 Dashboard - focusMinutes:', focusMinutes);
+  console.log('🔍 Dashboard - focusSessions count:', focusSessions.length);
+  console.log('🔍 Dashboard - focusSessions:', focusSessions);
+  console.log('🔍 Dashboard - getFocusMinutesToday function:', getFocusMinutesToday);
 
   const handleStartTimer = (taskId: string) => {
     startTimer('work', taskId);
