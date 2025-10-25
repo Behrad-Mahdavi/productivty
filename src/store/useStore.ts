@@ -176,11 +176,13 @@ export const useStore = create<AppStore>((set, get) => {
     
     // Subscribe to focus sessions
     const unsubscribeFocusSessions = subscribeToFocusSessions(userId, (sessions) => {
-      console.log('Real-time focus sessions update received:', sessions.length);
+      console.log('🔍 Real-time focus sessions update received:', sessions.length);
+      console.log('🔍 Focus sessions data:', sessions);
       set({ focusSessions: sessions });
       
       // ✅ گام دوم: فراخوانی _syncGamification با داده‌ی جدید
       //    (بعد از اینکه focusSessions به‌روز شده است)
+      console.log('🔍 Calling _syncGamification after focus sessions update...');
       get()._syncGamification();
     });
     
@@ -609,31 +611,41 @@ export const useStore = create<AppStore>((set, get) => {
     }
   },
   
-  stopTimer: async () => {
-    const { currentUserId } = get();
-    if (!currentUserId) return;
-    
-    const currentTimer = get().timerState;
-    if (currentTimer && currentTimer.mode === 'work') { // ✅ فقط سشن‌های کاری را ذخیره کن
+  stopTimer: withAsyncErrorHandling(
+    async () => {
+      const { currentUserId } = get();
+      if (!currentUserId) throw new Error('کاربر وارد نشده است');
       
-      const elapsedTimeSec = currentTimer.durationSec - currentTimer.remainingSec;
+      const currentTimer = get().timerState;
+      console.log('🔍 stopTimer - currentTimer:', currentTimer);
       
-      // ✅ شرط ضدگلوله: فقط زمانی ذخیره کن که تایمر در حالت کار بوده و بیش از یک دقیقه کار شده باشد
-      if (elapsedTimeSec >= 60) { // اگر حداقل 60 ثانیه کار شده
-        const session = completeSession(currentTimer);
-        await get()._finalizeSession(session);
+      if (currentTimer && currentTimer.mode === 'work') { // ✅ فقط سشن‌های کاری را ذخیره کن
+        
+        const elapsedTimeSec = currentTimer.durationSec - currentTimer.remainingSec;
+        console.log('🔍 stopTimer - elapsedTimeSec:', elapsedTimeSec, 'durationSec:', currentTimer.durationSec, 'remainingSec:', currentTimer.remainingSec);
+        
+        // ✅ شرط ضدگلوله: فقط زمانی ذخیره کن که تایمر در حالت کار بوده و بیش از یک دقیقه کار شده باشد
+        if (elapsedTimeSec >= 60) { // اگر حداقل 60 ثانیه کار شده
+          console.log('✅ stopTimer - Session will be saved, elapsed time:', elapsedTimeSec);
+          const session = completeSession(currentTimer);
+          console.log('🔍 stopTimer - created session:', session);
+          await get()._finalizeSession(session);
+        } else {
+          console.log('❌ stopTimer - Session NOT saved, elapsed time too short:', elapsedTimeSec);
+        }
+        
+        // در هر صورت، تایمر را متوقف کن
+        set({ timerState: null });
+        await saveTimerState(currentUserId, null);
+      } 
+      // ✅ اگر حالت استراحت بود (یا سشن کاری نبود)، فقط تایمر را متوقف کن و ذخیره نکن
+      else if (currentTimer) {
+        set({ timerState: null });
+        await saveTimerState(currentUserId, null);
       }
-      
-      // در هر صورت، تایمر را متوقف کن
-      set({ timerState: null });
-      await saveTimerState(currentUserId, null);
-    } 
-    // ✅ اگر حالت استراحت بود (یا سشن کاری نبود)، فقط تایمر را متوقف کن و ذخیره نکن
-    else if (currentTimer) {
-      set({ timerState: null });
-      await saveTimerState(currentUserId, null);
-    }
-  },
+    },
+    'تایمر متوقف شد'
+  ),
   
   skipTimer: async () => {
     const { currentUserId } = get();
@@ -832,12 +844,18 @@ export const useStore = create<AppStore>((set, get) => {
     const { currentUserId } = get();
     if (!currentUserId) return;
     
+    console.log('🔍 _finalizeSession - session:', session);
+    console.log('🔍 _finalizeSession - current focusSessions count:', get().focusSessions.length);
+    
     // ✅ گام اول: سشن جدید را فقط به لیست فعلی اضافه کن
     //    و آماده‌ی ذخیره باش (نیازی به set کردن محلی نیست)
     const sessionsToSave = [...get().focusSessions, session];
+    console.log('🔍 _finalizeSession - sessionsToSave count:', sessionsToSave.length);
     
     // ✅ گام دوم: ذخیره در Firestore و منتظر Listener باش
+    console.log('🔍 _finalizeSession - saving to Firestore...');
     await saveFocusSessions(currentUserId, sessionsToSave);
+    console.log('✅ _finalizeSession - saved to Firestore successfully');
     
     // ✅ اعتماد به Real-time Sync برای Reflections
     //    منطق به‌روزرسانی محلی Reflections حذف شد
@@ -849,11 +867,18 @@ export const useStore = create<AppStore>((set, get) => {
   // ✅ لایه هماهنگ‌سازی گیمیفیکیشن - به‌روزرسانی خودکار آمار
   _syncGamification: async () => {
     const { currentUserId, gamification } = get();
-    if (!currentUserId || !gamification) return;
+    console.log('🔍 _syncGamification - currentUserId:', currentUserId, 'gamification:', gamification);
+    
+    if (!currentUserId || !gamification) {
+      console.log('❌ _syncGamification - Missing currentUserId or gamification');
+      return;
+    }
     
     try {
+      console.log('🔍 _syncGamification - calculating user stats...');
       // محاسبه مجدد آمار کاربر
       const updatedUserStats = get().calculateUserStats(currentUserId);
+      console.log('🔍 _syncGamification - updatedUserStats:', updatedUserStats);
       
       // به‌روزرسانی آمار در store
       const updatedGamification = {
@@ -862,11 +887,14 @@ export const useStore = create<AppStore>((set, get) => {
         lastUpdated: new Date().toISOString()
       };
       set({ gamification: updatedGamification });
+      console.log('✅ _syncGamification - gamification updated in store');
       
       // به‌روزرسانی لیدربورد در سرور
+      console.log('🔍 _syncGamification - updating leaderboard...');
       await get().updateLeaderboard();
+      console.log('✅ _syncGamification - leaderboard updated');
     } catch (error) {
-      console.error('Error syncing gamification data:', error);
+      console.error('❌ Error syncing gamification data:', error);
     }
   },
 
