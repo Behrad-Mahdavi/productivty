@@ -204,33 +204,41 @@ export const FocusTimer: React.FC = () => {
       </div>
       
       <div className="zen-timer-body">
-        {/* Zen Progress Ring */}
+        {/* Zen Progress Ring - مرکز تجربه */}
         <div className="zen-ring-container">
           <div className={`zen-ring ${getModeClass()} ${timerState && !timerState.isPaused ? 'breathing' : ''}`}>
-            <svg className="zen-progress-ring" width="280" height="280">
+            <svg className="zen-progress-ring" width="320" height="320">
               <defs>
                 <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#5B8DEF" />
                   <stop offset="100%" stopColor="#F5A623" />
                 </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
               </defs>
               <circle
                 className="zen-progress-circle"
                 stroke="url(#progressGradient)"
-                strokeWidth="6"
+                strokeWidth="8"
                 fill="transparent"
-                r="130"
-                cx="140"
-                cy="140"
+                r="150"
+                cx="160"
+                cy="160"
+                filter="url(#glow)"
                 style={{
-                  strokeDasharray: '816.81',
-                  strokeDashoffset: `${816.81 - (816.81 * progress) / 100}`,
+                  strokeDasharray: '942.48',
+                  strokeDashoffset: `${942.48 - (942.48 * progress) / 100}`,
                   transition: 'stroke-dashoffset 1s ease-in-out'
                 }}
               />
             </svg>
             
-            {/* Zen Center Content */}
+            {/* Zen Center Content - قلب تجربه */}
             <div className="zen-center">
               <div className="zen-time-display">
                 {formatTime(timeLeft)}
@@ -239,32 +247,47 @@ export const FocusTimer: React.FC = () => {
                 {getModeText()}
               </div>
             </div>
+            
+            {/* Floating Action Button */}
+            {!timerState && (
+              <button
+                onClick={actionButton.onClick}
+                disabled={isProcessing}
+                className="zen-floating-btn"
+              >
+                {isProcessing ? (
+                  <Loader2 size={24} className="animate-spin" />
+                ) : (
+                  <Play size={24} />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Zen Motivational Text */}
+        {/* Zen Motivational Text - با انیمیشن */}
         <div className="zen-motivational">
-          <p className="zen-motivational-text">
+          <p className="zen-motivational-text fade-in">
             {getMotivationalText()}
           </p>
         </div>
 
-        {/* Zen Action Button */}
-        <div className="zen-actions">
-          <button
-            onClick={actionButton.onClick}
-            disabled={isProcessing}
-            className={`zen-action-btn ${actionButton.className}`}
-          >
-            {isProcessing ? (
-              <Loader2 size={24} className="zen-btn-icon animate-spin" />
-            ) : (
-              actionButton.icon
-            )}
-            <span className="zen-btn-text">{actionButton.text}</span>
-          </button>
-          
-          {timerState && (
+        {/* Zen Action Buttons - فقط وقتی تایمر فعاله */}
+        {timerState && (
+          <div className="zen-actions">
+            <button
+              onClick={actionButton.onClick}
+              disabled={isProcessing}
+              className={`zen-action-btn ${actionButton.className}`}
+            >
+              {isProcessing ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                actionButton.icon
+              )}
+              <span>{actionButton.text}</span>
+            </button>
+            
             <div className="zen-secondary-actions">
               <button
                 onClick={handleStop}
@@ -272,7 +295,7 @@ export const FocusTimer: React.FC = () => {
                 className="zen-secondary-btn"
                 title="پایان"
               >
-                <Square size={18} />
+                <Square size={16} />
               </button>
               
               <button
@@ -281,19 +304,21 @@ export const FocusTimer: React.FC = () => {
                 className="zen-secondary-btn"
                 title="رد کردن"
               >
-                <SkipForward size={18} />
+                <SkipForward size={16} />
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Zen Stats */}
+        {/* Zen Stats - با آیکون و انیمیشن */}
         <div className="zen-stats">
           <div className="zen-stat">
+            <div className="zen-stat-icon">⚡</div>
             <div className="zen-stat-number">{focusMinutesToday}</div>
-            <div className="zen-stat-label">دقیقه امروز</div>
+            <div className="zen-stat-label">دقیقه تمرکز</div>
           </div>
           <div className="zen-stat">
+            <div className="zen-stat-icon">🔁</div>
             <div className="zen-stat-number">{timerState?.cyclesCompleted || 0}</div>
             <div className="zen-stat-label">چرخه‌ها</div>
           </div>
