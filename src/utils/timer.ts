@@ -78,10 +78,6 @@ export const completeSession = (timerState: TimerState): FocusSession => {
   const now = new Date();
   const startTime = new Date(now.getTime() - (elapsed * 1000)).toISOString();
   
-  console.log('🔍 completeSession - timerState.startTimestamp:', timerState.startTimestamp);
-  console.log('🔍 completeSession - elapsed:', elapsed);
-  console.log('🔍 completeSession - calculated startTime:', startTime);
-  
   const session: FocusSession = {
     id: `session_${Date.now()}`,
     taskId: timerState.taskId,
@@ -92,7 +88,6 @@ export const completeSession = (timerState: TimerState): FocusSession => {
     type: timerState.mode as 'work' | 'shortBreak' | 'longBreak',
   };
 
-  console.log('🔍 completeSession - created session:', session);
   return session;
 };
 
