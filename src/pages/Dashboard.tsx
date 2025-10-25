@@ -19,6 +19,7 @@ export const Dashboard: React.FC = React.memo(() => {
   // ✅ اضافه کردن focusSessions برای reactivity
   useStore(state => state.focusSessions);
   
+  
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showReflectionForm, setShowReflectionForm] = useState(false);
   
@@ -73,7 +74,9 @@ export const Dashboard: React.FC = React.memo(() => {
       {/* Header with improved hierarchy */}
       <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between mb-5 gap-4">
         <div className="flex-grow-1">
-          <h1 className="h1 mb-2 fw-bold text-dark">سلام بهراد! 👋</h1>
+          <h1 className="h1 mb-2 fw-bold text-dark">
+            سلام! 👋
+          </h1>
           <DateDisplay variant="compact" showTime={true} />
           <p className="text-muted mt-2 mb-0">آماده‌ای برای یک روز پربار؟ 🌅</p>
         </div>
