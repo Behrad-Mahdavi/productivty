@@ -56,7 +56,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
       </div>
       
       {showPicker && (
-        <div className="dropdown-menu show position-absolute top-100 start-0 w-100 bg-white border rounded shadow-lg p-3 mt-1" style={{ zIndex: 10000 }}>
+        <div className="dropdown-menu show position-absolute top-100 start-0 w-100 bg-white border rounded shadow-lg p-3 mt-1" style={{ zIndex: 9999 }}>
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h6 className="mb-0">انتخاب تاریخ</h6>
             <button

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, Course, Reflection, FocusSession, TimerState, TimerAction, Assignment, TimerSettings, GamificationData, UserStats } from '../types';
+import type { Task, Course, Reflection, FocusSession, TimerState, Assignment, TimerSettings, GamificationData, UserStats } from '../types';
 import { 
   loadData, 
   saveTasks, 
@@ -65,16 +65,13 @@ interface AppStore {
   getReflection: (date: string) => Reflection | undefined;
   deleteReflection: (date: string) => Promise<void>;
   
-  // Timer actions - Legacy (deprecated)
+  // Timer actions
   startTimer: (mode: 'work' | 'shortBreak' | 'longBreak', taskId?: string) => Promise<void>;
   pauseTimer: () => Promise<void>;
   resumeTimer: () => Promise<void>;
   stopTimer: () => Promise<void>;
   skipTimer: () => Promise<void>;
   moveToNextPhase: () => Promise<void>;
-  
-  // ✅ New Reducer-based Timer System
-  timerDispatch: (action: TimerAction) => Promise<void>;
   
   // Computed values
   getTodayTasks: () => Task[];
@@ -624,10 +621,10 @@ export const useStore = create<AppStore>((set, get) => {
       
       if (currentTimer && currentTimer.mode === 'work') { // ✅ فقط سشن‌های کاری را ذخیره کن
         
-        // ✅ محاسبه صحیح elapsed time بر اساس startTime
+        // ✅ محاسبه صحیح elapsed time بر اساس startTimestamp
         const now = Date.now();
-        const elapsedTimeSec = Math.floor((now - new Date(currentTimer.startTime).getTime()) / 1000);
-        console.log('🔍 stopTimer - elapsedTimeSec:', elapsedTimeSec, 'startTime:', currentTimer.startTime, 'now:', now);
+        const elapsedTimeSec = Math.floor((now - currentTimer.startTimestamp) / 1000);
+        console.log('🔍 stopTimer - elapsedTimeSec:', elapsedTimeSec, 'startTimestamp:', currentTimer.startTimestamp, 'now:', now);
         
         // ✅ شرط ضدگلوله: فقط زمانی ذخیره کن که تایمر در حالت کار بوده و بیش از 10 ثانیه کار شده باشد
         if (elapsedTimeSec >= 10) { // اگر حداقل 10 ثانیه کار شده
@@ -661,7 +658,7 @@ export const useStore = create<AppStore>((set, get) => {
       // ✅ اصلاح منطق: استفاده از elapsed time بر اساس startTimestamp
       if (currentTimer.mode === 'work') {
         const now = Date.now();
-        const elapsedTimeSec = Math.floor((now - new Date(currentTimer.startTime).getTime()) / 1000);
+        const elapsedTimeSec = Math.floor((now - currentTimer.startTimestamp) / 1000);
         
         // ✅ فقط اگر حداقل 10 ثانیه کار شده باشد، سشن را ذخیره کن
         if (elapsedTimeSec >= 10) {
@@ -714,145 +711,6 @@ export const useStore = create<AppStore>((set, get) => {
     },
     'فاز تایمر تغییر کرد'
   ),
-  
-  // ✅ New Reducer-based Timer System
-  timerDispatch: async (action: TimerAction) => {
-    const { currentUserId, timerState } = get();
-    
-    
-    // ✅ اجازه START حتی بدون userId (local mode)
-    if (!currentUserId && action.type !== 'START') {
-      console.warn('⛔ No userId, skipping timer dispatch for', action.type);
-      return;
-    }
-    
-    // ✅ از withAsyncErrorHandling برای مدیریت خطا در سراسر Reducer استفاده کن
-    await withAsyncErrorHandling(
-      async () => {
-        
-        // 1. منطق اصلی Reducer
-        let newState: TimerState | null = timerState;
-        let sessionToFinalize: FocusSession | undefined;
-
-        switch (action.type) {
-          case 'START':
-            // ساخت TimerState جدید بر اساس تنظیمات
-            const settings = get().timerSettings;
-            const durationSec = action.mode === 'work' ? settings.workDuration * 60 :
-                               action.mode === 'shortBreak' ? settings.shortBreakDuration * 60 :
-                               settings.longBreakDuration * 60;
-            
-            newState = {
-              mode: action.mode,
-              startTime: new Date().toISOString(),
-              durationSec,
-              remainingSec: durationSec,
-              cyclesCompleted: 0,
-              isPaused: false,
-              taskId: undefined
-            };
-            break;
-
-          case 'PAUSE':
-            if (newState) {
-              newState = { ...newState, isPaused: true };
-            }
-            break;
-
-          case 'RESUME':
-            if (newState) {
-              newState = { ...newState, isPaused: false };
-            }
-            break;
-
-          case 'STOP_SAVE':
-          case 'SKIP_PHASE':
-            if (newState && newState.mode === 'work') {
-              const elapsedTimeSec = newState.durationSec - newState.remainingSec;
-              
-              // ✅ فقط اگر کار معنادار انجام شده، سشن را نهایی کن
-              if (elapsedTimeSec >= 60) {
-                sessionToFinalize = completeSession(newState);
-              }
-            }
-            
-            if (action.type === 'STOP_SAVE') {
-              newState = null; // توقف کامل
-            } else { // SKIP_PHASE
-              // منطق محاسبه فاز بعدی
-              const nextMode = getNextMode(newState!.mode, newState!.cyclesCompleted);
-              const newCycles = newState!.mode === 'work' ? newState!.cyclesCompleted + 1 : newState!.cyclesCompleted;
-              
-              const settings = get().timerSettings;
-              const durationSec = nextMode === 'work' ? settings.workDuration * 60 :
-                                 nextMode === 'shortBreak' ? settings.shortBreakDuration * 60 :
-                                 settings.longBreakDuration * 60;
-              
-              newState = {
-                mode: nextMode,
-                startTime: new Date().toISOString(),
-                durationSec,
-                remainingSec: durationSec,
-                cyclesCompleted: newCycles,
-                isPaused: false,
-                taskId: newState!.taskId
-              };
-            }
-            break;
-            
-          case 'TIME_ELAPSED':
-            if (newState && !newState.isPaused) {
-              const newRemaining = Math.max(0, newState.remainingSec - action.seconds);
-              newState = { ...newState, remainingSec: newRemaining };
-              
-              // ✅ بررسی اتمام خودکار
-              if (newRemaining === 0) {
-                // اگر تمام شده، باید سشن را نهایی کنیم و به فاز بعدی برویم
-                if (newState.mode === 'work') {
-                  sessionToFinalize = completeSession(newState);
-                }
-                
-                const nextMode = getNextMode(newState.mode, newState.cyclesCompleted);
-                const newCycles = newState.mode === 'work' ? newState.cyclesCompleted + 1 : newState.cyclesCompleted;
-                
-                const settings = get().timerSettings;
-                const durationSec = nextMode === 'work' ? settings.workDuration * 60 :
-                                   nextMode === 'shortBreak' ? settings.shortBreakDuration * 60 :
-                                   settings.longBreakDuration * 60;
-                
-                newState = {
-                  mode: nextMode,
-                  startTime: new Date().toISOString(),
-                  durationSec,
-                  remainingSec: durationSec,
-                  cyclesCompleted: newCycles,
-                  isPaused: false,
-                  taskId: newState.taskId
-                };
-              }
-            }
-            break;
-        }
-        
-        // 2. اجرای نهایی‌سازی (اگر سشن وجود دارد)
-        if (sessionToFinalize) {
-          await get()._finalizeSession(sessionToFinalize);
-        }
-
-        // 3. به‌روزرسانی نهایی استور
-        set({ timerState: newState });
-        
-        // 👇 ذخیره‌سازی شرطی - همیشه local state آپدیت می‌شود
-        if (newState) {
-          if (currentUserId) {
-            await saveTimerState(currentUserId, newState);
-          } else {
-          }
-        }
-      },
-      'وضعیت تایمر به‌روز شد'
-    )(); // 👈 این پرانتز مهمه - اجرای واقعی تابع
-  },
   
   // Computed values
   getTodayTasks: () => {

@@ -63,7 +63,7 @@ export const TasksPage: React.FC = React.memo(() => {
       </div>
 
       {/* Filters */}
-      <div className="card mb-4 no-hover">
+      <div className="card mb-4">
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-4">
@@ -106,7 +106,7 @@ export const TasksPage: React.FC = React.memo(() => {
 
       {/* Progress Bar */}
       {totalTasks > 0 && (
-        <div className="card mb-4 no-hover">
+        <div className="card mb-4">
           <div className="card-body">
             <div className="d-flex align-items-center justify-content-between mb-2">
               <h6 className="mb-0">پیشرفت روزانه</h6>
@@ -125,7 +125,7 @@ export const TasksPage: React.FC = React.memo(() => {
       )}
 
       {/* Tasks List */}
-      <div className="card no-hover">
+      <div className="card">
         <div className="card-header d-flex align-items-center justify-content-between">
           <h5 className="mb-0">
             کارهای امروز

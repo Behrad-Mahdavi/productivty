@@ -48,23 +48,14 @@ export interface FocusSession {
 }
 
 export interface TimerState {
-  mode: 'work' | 'shortBreak' | 'longBreak';
-  startTime: string; // زمان شروع تایمر (ISO string)
-  durationSec: number; // مدت زمان کل سشن
-  remainingSec: number; // ثانیه‌های باقی‌مانده
-  cyclesCompleted: number; // تعداد چرخه‌های پومودوروی تکمیل شده
+  mode: 'work' | 'shortBreak' | 'longBreak' | 'idle';
+  startTimestamp: number;
+  durationSec: number;
+  remainingSec: number;
+  taskId?: string;
+  cyclesCompleted: number;
   isPaused: boolean;
-  taskId?: string; // اختیاری
 }
-
-// TimerAction types برای Reducer Pattern
-export type TimerAction =
-  | { type: 'START'; mode: 'work' }
-  | { type: 'PAUSE' }
-  | { type: 'RESUME' }
-  | { type: 'STOP_SAVE' }
-  | { type: 'SKIP_PHASE' }
-  | { type: 'TIME_ELAPSED'; seconds: number };
 
 export interface User {
   id: string;

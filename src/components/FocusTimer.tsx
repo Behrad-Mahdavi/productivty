@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Square, SkipForward, Loader2 } from 'lucide-react'; 
 import { useStore } from '../store/useStore';
-import { formatTime, getRemainingTime, getTimerProgress } from '../utils/timer';
+import { formatTime, getRemainingTime, getTimerProgress, isTimerComplete } from '../utils/timer';
 import { TimerSettings } from './TimerSettings';
 
 // توابع ثابت برای حالت‌های تایمر، خوانایی و کاهش خطاهای تایپی
@@ -13,10 +13,17 @@ const TIMER_MODES = {
 
 export const FocusTimer: React.FC = () => {
   // *** ✅ اصلاح: حذف completeCurrentTimer از انتخابگر که باعث ارور می‌شد ***
-  // ✅ New Reducer-based Timer System - استفاده از reactive selectors
-  const timerState = useStore((s) => s.timerState);
-  const timerDispatch = useStore((s) => s.timerDispatch);
-  const getFocusMinutesToday = useStore((s) => s.getFocusMinutesToday);
+  // ✅ اضافه کردن focusMinutesToday به انتخابگر برای رفع باگ رندرینگ آمار
+  const { 
+    timerState, 
+    startTimer, 
+    pauseTimer, 
+    resumeTimer, 
+    stopTimer, 
+    skipTimer,
+    moveToNextPhase,
+    getFocusMinutesToday
+  } = useStore();
 
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -74,11 +81,14 @@ export const FocusTimer: React.FC = () => {
     setTimeLeft(remaining);
     setProgress(timerProgress);
 
-    // ✅ New Reducer-based: استفاده از TIME_ELAPSED action
-    if (!timerState.isPaused) {
-      timerDispatch({ type: 'TIME_ELAPSED', seconds: 1 });
+    // ✅ اصلاح ساختاری: استفاده از moveToNextPhase برای انتقال خودکار به فاز بعدی
+    if (isTimerComplete(timerState)) {
+      if (remaining <= 0) { 
+        moveToNextPhase(); // انتقال خودکار به فاز بعدی (تمرکز → استراحت → تمرکز)
+      }
+      return;
     }
-  }, [timerState]); // حذف timerDispatch از dependencies
+  }, [timerState, moveToNextPhase]); // ✅ وابستگی به moveToNextPhase برای انتقال فاز
 
   useEffect(() => {
     updateTimer();
@@ -88,38 +98,34 @@ export const FocusTimer: React.FC = () => {
 
   // --- Handlers ---
 
-  // ✅ New Reducer-based Handlers - جدا کردن PAUSE و RESUME
   const handleStart = () => {
     setIsProcessing(true);
-    timerDispatch({ type: 'START', mode: 'work' });
+    startTimer(TIMER_MODES.WORK);
     playSound('start');
     setTimeout(() => setIsProcessing(false), 50); 
   };
 
-
   const handlePause = () => {
     setIsProcessing(true);
-    timerDispatch({ type: 'PAUSE' });
-    playSound('pause');
-    setTimeout(() => setIsProcessing(false), 50);
-  };
-
-  const handleResume = () => {
-    setIsProcessing(true);
-    timerDispatch({ type: 'RESUME' });
-    playSound('start');
+    if (timerState?.isPaused) {
+      resumeTimer();
+      playSound('start');
+    } else {
+      pauseTimer();
+      playSound('pause');
+    }
     setTimeout(() => setIsProcessing(false), 50);
   };
 
   const handleStop = () => {
     setIsProcessing(true);
-    timerDispatch({ type: 'STOP_SAVE' });
+    stopTimer();
     setTimeout(() => setIsProcessing(false), 50);
   };
 
   const handleSkip = () => {
     setIsProcessing(true);
-    timerDispatch({ type: 'SKIP_PHASE' });
+    skipTimer();
     setTimeout(() => setIsProcessing(false), 50);
   };
 
@@ -175,7 +181,7 @@ export const FocusTimer: React.FC = () => {
         text: 'ادامه',
         icon: <Play size={20} className="me-2" />,
         className: 'btn-success',
-        onClick: handleResume
+        onClick: handlePause
       };
     }
     
@@ -317,7 +323,6 @@ export const FocusTimer: React.FC = () => {
             <div className="zen-stat-label">چرخه‌ها</div>
           </div>
         </div>
-
       </div>
     </div>
   );
