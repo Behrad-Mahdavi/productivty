@@ -726,6 +726,8 @@ export const useStore = create<AppStore>((set, get) => {
     // ✅ از withAsyncErrorHandling برای مدیریت خطا در سراسر Reducer استفاده کن
     await withAsyncErrorHandling(
       async () => {
+        console.log('✅ timerDispatch triggered with', action);
+        
         // 1. منطق اصلی Reducer
         let newState: TimerState | null = timerState;
         let sessionToFinalize: FocusSession | undefined;
@@ -842,7 +844,7 @@ export const useStore = create<AppStore>((set, get) => {
         }
       },
       'وضعیت تایمر به‌روز شد'
-    );
+    )(); // 👈 این پرانتز مهمه - اجرای واقعی تابع
   },
   
   // Computed values

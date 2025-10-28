@@ -13,12 +13,10 @@ const TIMER_MODES = {
 
 export const FocusTimer: React.FC = () => {
   // *** ✅ اصلاح: حذف completeCurrentTimer از انتخابگر که باعث ارور می‌شد ***
-  // ✅ New Reducer-based Timer System
-  const { 
-    timerState, 
-    timerDispatch,
-    getFocusMinutesToday
-  } = useStore();
+  // ✅ New Reducer-based Timer System - استفاده از reactive selectors
+  const timerState = useStore((s) => s.timerState);
+  const timerDispatch = useStore((s) => s.timerDispatch);
+  const getFocusMinutesToday = useStore((s) => s.getFocusMinutesToday);
 
   const [timeLeft, setTimeLeft] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -92,6 +90,7 @@ export const FocusTimer: React.FC = () => {
 
   // ✅ New Reducer-based Handlers - جدا کردن PAUSE و RESUME
   const handleStart = () => {
+    console.log('⏳ Dispatching START');
     setIsProcessing(true);
     timerDispatch({ type: 'START', mode: 'work' });
     playSound('start');
