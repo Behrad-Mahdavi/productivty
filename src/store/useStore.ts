@@ -718,8 +718,14 @@ export const useStore = create<AppStore>((set, get) => {
   // ✅ New Reducer-based Timer System
   timerDispatch: async (action: TimerAction) => {
     const { currentUserId, timerState } = get();
+    
+    console.log('🧠 Dispatch called with', action);
+    console.log('👤 currentUserId:', currentUserId);
+    console.log('🕒 current timerState:', timerState);
+    
+    // ✅ اجازه START حتی بدون userId (local mode)
     if (!currentUserId && action.type !== 'START') {
-      // باید در اینجا یک Notification برای کاربر نمایش دهیم
+      console.warn('⛔ No userId, skipping timer dispatch for', action.type);
       return;
     }
     
@@ -839,8 +845,15 @@ export const useStore = create<AppStore>((set, get) => {
 
         // 3. به‌روزرسانی نهایی استور
         set({ timerState: newState });
-        if (currentUserId && newState) {
-          await saveTimerState(currentUserId, newState);
+        
+        // 👇 ذخیره‌سازی شرطی - همیشه local state آپدیت می‌شود
+        if (newState) {
+          if (currentUserId) {
+            await saveTimerState(currentUserId, newState);
+            console.log('💾 Timer state saved to Firestore');
+          } else {
+            console.log('⚠️ تایمر بدون کاربر فعال شد (local only)');
+          }
         }
       },
       'وضعیت تایمر به‌روز شد'

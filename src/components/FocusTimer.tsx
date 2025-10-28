@@ -97,6 +97,12 @@ export const FocusTimer: React.FC = () => {
     setTimeout(() => setIsProcessing(false), 50); 
   };
 
+  // 🔧 تست دستی برای debug
+  const testTimerDispatch = () => {
+    console.log('🧪 Testing timer dispatch manually...');
+    useStore.getState().timerDispatch({ type: 'START', mode: 'work' });
+  };
+
   const handlePause = () => {
     setIsProcessing(true);
     timerDispatch({ type: 'PAUSE' });
@@ -316,6 +322,17 @@ export const FocusTimer: React.FC = () => {
             <div className="zen-stat-number">{timerState?.cyclesCompleted || 0}</div>
             <div className="zen-stat-label">چرخه‌ها</div>
           </div>
+        </div>
+
+        {/* 🔧 Debug Button - موقت */}
+        <div className="mt-3">
+          <button
+            onClick={testTimerDispatch}
+            className="btn btn-sm btn-outline-secondary"
+            style={{ fontSize: '12px' }}
+          >
+            🧪 Test Timer Dispatch
+          </button>
         </div>
       </div>
     </div>
