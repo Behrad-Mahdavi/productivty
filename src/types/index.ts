@@ -60,7 +60,8 @@ export interface TimerState {
 // TimerAction types برای Reducer Pattern
 export type TimerAction =
   | { type: 'START'; mode: 'work' }
-  | { type: 'PAUSE_RESUME' }
+  | { type: 'PAUSE' }
+  | { type: 'RESUME' }
   | { type: 'STOP_SAVE' }
   | { type: 'SKIP_PHASE' }
   | { type: 'TIME_ELAPSED'; seconds: number };

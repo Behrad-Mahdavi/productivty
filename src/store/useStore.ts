@@ -749,9 +749,15 @@ export const useStore = create<AppStore>((set, get) => {
             };
             break;
 
-          case 'PAUSE_RESUME':
+          case 'PAUSE':
             if (newState) {
-              newState = { ...newState, isPaused: !newState.isPaused };
+              newState = { ...newState, isPaused: true };
+            }
+            break;
+
+          case 'RESUME':
+            if (newState) {
+              newState = { ...newState, isPaused: false };
             }
             break;
 

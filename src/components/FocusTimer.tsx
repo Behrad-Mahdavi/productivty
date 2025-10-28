@@ -90,7 +90,7 @@ export const FocusTimer: React.FC = () => {
 
   // --- Handlers ---
 
-  // ✅ New Reducer-based Handlers
+  // ✅ New Reducer-based Handlers - جدا کردن PAUSE و RESUME
   const handleStart = () => {
     setIsProcessing(true);
     timerDispatch({ type: 'START', mode: 'work' });
@@ -100,12 +100,15 @@ export const FocusTimer: React.FC = () => {
 
   const handlePause = () => {
     setIsProcessing(true);
-    timerDispatch({ type: 'PAUSE_RESUME' });
-    if (timerState?.isPaused) {
-      playSound('start');
-    } else {
-      playSound('pause');
-    }
+    timerDispatch({ type: 'PAUSE' });
+    playSound('pause');
+    setTimeout(() => setIsProcessing(false), 50);
+  };
+
+  const handleResume = () => {
+    setIsProcessing(true);
+    timerDispatch({ type: 'RESUME' });
+    playSound('start');
     setTimeout(() => setIsProcessing(false), 50);
   };
 
@@ -173,7 +176,7 @@ export const FocusTimer: React.FC = () => {
         text: 'ادامه',
         icon: <Play size={20} className="me-2" />,
         className: 'btn-success',
-        onClick: handlePause
+        onClick: handleResume
       };
     }
     
