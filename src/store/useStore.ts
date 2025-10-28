@@ -719,9 +719,6 @@ export const useStore = create<AppStore>((set, get) => {
   timerDispatch: async (action: TimerAction) => {
     const { currentUserId, timerState } = get();
     
-    console.log('🧠 Dispatch called with', action);
-    console.log('👤 currentUserId:', currentUserId);
-    console.log('🕒 current timerState:', timerState);
     
     // ✅ اجازه START حتی بدون userId (local mode)
     if (!currentUserId && action.type !== 'START') {
@@ -732,7 +729,6 @@ export const useStore = create<AppStore>((set, get) => {
     // ✅ از withAsyncErrorHandling برای مدیریت خطا در سراسر Reducer استفاده کن
     await withAsyncErrorHandling(
       async () => {
-        console.log('✅ timerDispatch triggered with', action);
         
         // 1. منطق اصلی Reducer
         let newState: TimerState | null = timerState;
@@ -850,9 +846,7 @@ export const useStore = create<AppStore>((set, get) => {
         if (newState) {
           if (currentUserId) {
             await saveTimerState(currentUserId, newState);
-            console.log('💾 Timer state saved to Firestore');
           } else {
-            console.log('⚠️ تایمر بدون کاربر فعال شد (local only)');
           }
         }
       },

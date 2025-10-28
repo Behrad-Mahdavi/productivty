@@ -17,8 +17,6 @@ export const Dashboard: React.FC = React.memo(() => {
   const startTimer = useStore(state => state.startTimer);
   const timerState = useStore(state => state.timerState);
   
-  // ✅ اضافه کردن focusSessions برای reactivity
-  useStore(state => state.focusSessions);
   
   
   const [showTaskForm, setShowTaskForm] = useState(false);

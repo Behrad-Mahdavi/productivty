@@ -78,7 +78,7 @@ export const FocusTimer: React.FC = () => {
     if (!timerState.isPaused) {
       timerDispatch({ type: 'TIME_ELAPSED', seconds: 1 });
     }
-  }, [timerState, timerDispatch]);
+  }, [timerState]); // حذف timerDispatch از dependencies
 
   useEffect(() => {
     updateTimer();
@@ -90,18 +90,12 @@ export const FocusTimer: React.FC = () => {
 
   // ✅ New Reducer-based Handlers - جدا کردن PAUSE و RESUME
   const handleStart = () => {
-    console.log('⏳ Dispatching START');
     setIsProcessing(true);
     timerDispatch({ type: 'START', mode: 'work' });
     playSound('start');
     setTimeout(() => setIsProcessing(false), 50); 
   };
 
-  // 🔧 تست دستی برای debug
-  const testTimerDispatch = () => {
-    console.log('🧪 Testing timer dispatch manually...');
-    useStore.getState().timerDispatch({ type: 'START', mode: 'work' });
-  };
 
   const handlePause = () => {
     setIsProcessing(true);
@@ -324,16 +318,6 @@ export const FocusTimer: React.FC = () => {
           </div>
         </div>
 
-        {/* 🔧 Debug Button - موقت */}
-        <div className="mt-3">
-          <button
-            onClick={testTimerDispatch}
-            className="btn btn-sm btn-outline-secondary"
-            style={{ fontSize: '12px' }}
-          >
-            🧪 Test Timer Dispatch
-          </button>
-        </div>
       </div>
     </div>
   );
